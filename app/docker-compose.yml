@@ -1,0 +1,86 @@
+services:
+  app:
+    image: nginx:stable-alpine
+    container_name: spec-aligned-ai
+    ports:
+      - "80:80"
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+      - horizon
+    networks:
+      - said-network
+
+  php:
+    image: said-php
+    build:
+      context: ./backend/docker/php
+      dockerfile: Dockerfile
+    container_name: spec-aligned-ai-php
+    volumes:
+      - ./backend:/var/www/html
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=said
+      - DB_USERNAME=said
+      - DB_PASSWORD=said_secret
+    depends_on:
+      - postgres
+    networks:
+      - said-network
+
+  horizon:
+    image: said-horizon
+    build:
+      context: ./backend/docker/php
+      dockerfile: Dockerfile
+    container_name: spec-aligned-ai-horizon
+    volumes:
+      - ./backend:/var/www/html
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=said
+      - DB_USERNAME=said
+      - DB_PASSWORD=said_secret
+    command: php /var/www/html/artisan horizon
+    depends_on:
+      - php
+      - postgres
+      - redis
+    networks:
+      - said-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: spec-aligned-ai-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - said-network
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: spec-aligned-ai-postgres
+    environment:
+      - POSTGRES_DB=said
+      - POSTGRES_USER=said
+      - POSTGRES_PASSWORD=said_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - said-network
+
+networks:
+  said-network:
+    driver: bridge
