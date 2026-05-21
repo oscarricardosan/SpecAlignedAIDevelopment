@@ -59,6 +59,64 @@ class InstallController extends Controller
 
         sleep(1);
 
+        return redirect()->to("/install/storage");
+    }
+
+    public function showStorageForm()
+    {
+        return view("install.storage");
+    }
+
+    public function saveStorage(Request $request)
+    {
+        $data = $request->validate([
+            "s3_endpoint"  => "required|string",
+            "s3_key"       => "required|string",
+            "s3_secret"    => "required|string",
+            "s3_bucket"    => "required|string",
+            "s3_region"    => "nullable|string",
+            "said_root"    => "required|string",
+        ]);
+
+        // Write to Laravel .env
+        $this->writeEnv([
+            "S3_ENDPOINT"  => $data["s3_endpoint"],
+            "S3_KEY"       => $data["s3_key"],
+            "S3_SECRET"    => $data["s3_secret"],
+            "S3_BUCKET"    => $data["s3_bucket"],
+            "S3_REGION"    => $data["s3_region"] ?? "us-east-1",
+            "SAID_ROOT"    => $data["said_root"],
+        ]);
+
+        // Also write SAID_ROOT to /said-setup/.env so docker-compose can read it on restart
+        $this->writeDockerComposeEnv([
+            "SAID_ROOT" => $data["said_root"],
+        ]);
+
+        session(["said_root_expected" => $data["said_root"]]);
+
+        return redirect()->to("/install/restart");
+    }
+
+    public function showRestart()
+    {
+        if (!session("said_root_expected")) {
+            return redirect("/install/storage");
+        }
+        return view("install.restart", [
+            "said_root" => session("said_root_expected"),
+            "mounted"   => is_dir("/said-projects") && is_readable("/said-projects"),
+        ]);
+    }
+
+    public function saveRestart()
+    {
+        if (!is_dir("/said-projects") || !is_readable("/said-projects")) {
+            return back()->withErrors(["restart" => "The projects folder is still not mounted. Please restart Docker containers first."]);
+        }
+
+        session()->forget("said_root_expected");
+
         return redirect()->to("/install/user");
     }
 
@@ -100,6 +158,41 @@ class InstallController extends Controller
     private function writeEnv(array $values): void
     {
         $path = base_path(".env");
+        $content = file_get_contents($path);
+
+        foreach ($values as $key => $value) {
+            if (str_contains($content, $key . "=")) {
+                $content = preg_replace(
+                    "/^" . preg_quote($key, "/") . "=.*/m",
+                    $key . "=" . $value,
+                    $content
+                );
+            } else {
+                $content .= "\n" . $key . "=" . $value;
+            }
+        }
+
+        file_put_contents($path, $content);
+    }
+
+    private function writeDockerComposeEnv(array $values): void
+    {
+        $dir  = "/var/docker";
+        $path = "{$dir}/.env";
+
+        if (!is_dir($dir)) {
+            mkdir($dir, 0755, true);
+        }
+
+        // Docker may have created .env as a directory if the host file didn't exist
+        if (is_dir($path)) {
+            rmdir($path);
+        }
+
+        if (!file_exists($path)) {
+            file_put_contents($path, "");
+        }
+
         $content = file_get_contents($path);
 
         foreach ($values as $key => $value) {

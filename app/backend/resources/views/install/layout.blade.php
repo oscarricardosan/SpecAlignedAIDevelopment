@@ -37,11 +37,12 @@ document.addEventListener("DOMContentLoaded", function () {
                 {{-- Step indicator --}}
                 <div class="flex items-center justify-center gap-3 mb-8">
                     @php
-                        $currentStep = request()->is('install/user') ? 2 : (request()->is('install/complete') ? 3 : 1);
+                        $currentStep = request()->is('install/user') ? 3 : (request()->is('install/complete') ? 4 : (request()->is('install/restart') || request()->is('install/storage') ? 2 : 1));
                         $steps = [
                             1 => ['label' => 'Database', 'desc' => 'Connect to PostgreSQL'],
-                            2 => ['label' => 'Admin user', 'desc' => 'Create your account'],
-                            3 => ['label' => 'Ready', 'desc' => 'Start using SAID'],
+                            2 => ['label' => 'Storage', 'desc' => 'S3 and file root'],
+                            3 => ['label' => 'Admin user', 'desc' => 'Create your account'],
+                            4 => ['label' => 'Ready', 'desc' => 'Start using SAID'],
                         ];
                     @endphp
                     @foreach ($steps as $i => $step)
@@ -61,7 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 {{ $step['label'] }}
                             </span>
                         </div>
-                        @if ($i < 3)
+                        @if ($i < 4)
                             <div class="w-6 h-0.5 {{ $i < $currentStep ? 'bg-teal-light' : 'bg-white/10' }} -mt-4"></div>
                         @endif
                     @endforeach

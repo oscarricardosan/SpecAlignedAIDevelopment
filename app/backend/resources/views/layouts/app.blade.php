@@ -41,13 +41,12 @@
 
             <p class="px-3 pt-4 pb-1.5 text-xs font-semibold text-white/25 uppercase tracking-widest">Workspace</p>
 
-            <a href="#"
+            <a href="/projects"
                class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('projects*') }} transition">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
                 </svg>
                 <span>Projects</span>
-                <span class="ml-auto text-[11px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/40 font-medium">soon</span>
             </a>
 
             <a href="#"

@@ -78,6 +78,7 @@ La base de datos (PostgreSQL) reside en el servidor y es compartida por todos lo
 
 ```bash
 cd app/
+cp .env.example .env      # First time only — creates the env file for Docker Compose
 docker compose up -d                  # Levanta todos los servicios
 docker compose exec php php artisan migrate   # Crea tablas en PostgreSQL
 docker compose exec php php artisan db:seed   # Usuario inicial (seeder)
@@ -238,6 +239,17 @@ SAID incluye un sistema de usuarios a nivel de aplicación Laravel:
 
 > La autenticación es propia de Laravel (no depende de servicios externos). Cada usuario se conecta a la misma BD PostgreSQL y ve los metadatos compartidos del proyecto, mientras sus archivos residen en su filesystem local.
 
+## Ejecución de comandos
+
+Cada proyecto puede usar stacks distintos (PHP, Rust, Python…). SAID no puede ejecutar esos comandos desde dentro del contenedor PHP. Para resolverlo, cada proyecto define su **executor**:
+
+| Executor | Cómo funciona | Pide |
+|---|---|---|
+| **Docker** | SAID lanza contenedores efímeros vía `docker.sock` montando el volumen del proyecto | Ruta del `docker-compose.yml` |
+| **Agent** | Un binario ligero instalado en el host escucha comandos de SAID | `host:port` del agente |
+
+> Se configura al crear el proyecto. SAID envía el comando (`cargo test`, `pytest`, `npm run build`) al executor elegido y recoge el output.
+
 ## Modelo de Datos
 
 *(por definir — tablas principales: users, projects, apps, screens, modules, functions, agents, tests, dependencies)*
@@ -378,6 +390,30 @@ Grid 2×2. Cada card: borde `cool/50`, hover borde `teal/60` + sombra. Ícono 36
 | Primario | `bg-teal text-white px-4 py-2 rounded-lg hover:bg-teal-dark` |
 | Secundario | `border border-cool text-navy px-4 py-2 rounded-lg hover:border-teal hover:text-teal` |
 
+#### Empty state
+
+Cuando una entidad no tiene datos, mostrar siempre una guía visual:
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                                                          │
+│                    [ ícono 64px en círculo teal/15 ]     │
+│                                                          │
+│                    No projects yet                       │
+│           Projects are the top-level containers...       │
+│                                                          │
+│                 [ Create your first project ]            │
+│                                                          │
+└──────────────────────────────────────────────────────────┘
+```
+
+- Ícono representativo de la entidad (carpeta, pantalla, agente…).
+- Círculo `w-16 h-16 rounded-full bg-teal/15` con ícono `text-teal w-8 h-8`.
+- Título `text-lg font-bold text-navy`.
+- Descripción `text-sm text-warm max-w-md mx-auto` explicando qué es la entidad.
+- CTA primario con verbo claro: "Create your first…".
+- Todo centrado con `max-w-2xl mx-auto text-center py-16`.
+
 ### Arquitectura CSS
 
 | Capa | Archivo | Qué contiene |
@@ -396,3 +432,4 @@ Grid 2×2. Cada card: borde `cool/50`, hover borde `teal/60` + sombra. Ícono 36
 - **Estados visibles**: Badges "soon" / "Coming soon" con estilo consistente en sidebar y cards.
 - **Solo Desktop**: Mínimo 1024px de ancho. No responsive para móvil.
 - **Sidebar siempre visible**: Navegación jerárquica presente en todo momento (árbol de proyectos en el futuro).
+- **Empty state obligatorio**: Toda entidad (proyectos, apps, módulos, funciones, agentes…) debe tener una pantalla de índice que, cuando no hay datos, muestre un empty state con ícono, título descriptivo ("No projects yet"), explicación breve de qué es la entidad y un CTA claro para crear la primera. Nunca una tabla vacía o un espacio en blanco.

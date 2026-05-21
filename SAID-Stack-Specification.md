@@ -90,6 +90,13 @@ app/
 
 ```bash
 cd app/
+
+# Create the Docker Compose env file from the template
+cp .env.example .env
+
+# Edit .env to set your projects root path
+# SAID_ROOT=/your/projects/path
+
 docker compose up -d
 ```
 

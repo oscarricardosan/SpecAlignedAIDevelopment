@@ -21,7 +21,9 @@ services:
     container_name: spec-aligned-ai-php
     volumes:
       - ./backend:/var/www/html
+      - ./.env:/var/docker/.env
       - /var/run/docker.sock:/var/run/docker.sock
+      - ${SAID_ROOT:?SAID_ROOT_not_set}:/said-projects
     environment:
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
@@ -29,8 +31,14 @@ services:
       - DB_DATABASE=said
       - DB_USERNAME=said
       - DB_PASSWORD=said_secret
+      - S3_ENDPOINT=http://minio:9000
+      - S3_KEY=said_admin
+      - S3_SECRET=said_secret
+      - S3_BUCKET=said-specs
+      - S3_REGION=us-east-1
     depends_on:
       - postgres
+      - minio
     networks:
       - said-network
 
@@ -49,11 +57,17 @@ services:
       - DB_DATABASE=said
       - DB_USERNAME=said
       - DB_PASSWORD=said_secret
+      - S3_ENDPOINT=http://minio:9000
+      - S3_KEY=said_admin
+      - S3_SECRET=said_secret
+      - S3_BUCKET=said-specs
+      - S3_REGION=us-east-1
     command: php /var/www/html/artisan horizon
     depends_on:
       - php
       - postgres
       - redis
+      - minio
     networks:
       - said-network
 
@@ -78,6 +92,21 @@ services:
       - "5432:5432"
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - said-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: spec-aligned-ai-minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=said_admin
+      - MINIO_ROOT_PASSWORD=said_secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./data/minio:/data
     networks:
       - said-network
 
