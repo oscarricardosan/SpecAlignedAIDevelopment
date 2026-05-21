@@ -12,46 +12,47 @@ La base de datos (PostgreSQL) reside en el servidor y es compartida por todos lo
 
 ```
 🐳 Docker
-┌──────────────────────────────────────────────────────────────────┐
-│  Nginx                                                            │
-│  ┌──────────────────┐  ┌────────────────────────────────────┐    │
-│  │ Frontend           │  │ API REST (JSON)                    │    │
-│  │ Alpine.js + Tail.  │  │ /api/proyectos                     │    │
-│  │ Componentes reutil.│  │ /api/apps                          │    │
-│  │                    │  │ /api/modulos                       │    │
-│  │                    │  │ /api/funcionalidades               │    │
-│  │                    │  │ /api/agentes                       │    │
-│  │                    │  │ /api/tests                         │    │
-│  │                    │  │ /api/chat                          │    │
-│  │                    │  │ /api/git                           │    │
-│  └──────────────────┘  └──────────┬─────────────────────────┘    │
-│                                    │                               │
-│                           ┌────────▼────────┐                     │
-│                           │  Laravel Backend  │                     │
-│                           │  ┌────────────┐   │                     │
-│                           │  │ Auth        │   │  ← Usuarios, roles│
-│                           │  ├────────────┤   │                     │
-│                           │  │ Controlador │   │                     │
-│                           │  ├────────────┤   │                     │
-│                           │  │ Servicio    │   │                     │
-│                           │  ├────────────┤   │                     │
-│                           │  │ Repositorio │   │                     │
-│                           │  ├────────────┤   │                     │
-│                           │  │ Adaptadores  │   │                     │
-│                           │  │ (IA, Git,   │   │                     │
-│                           │  │  Filesystem)│   │                     │
-│                           │  └────────────┘   │                     │
-│                           └───────────────────┘                     │
-│                                    │                                │
-│  ┌───────────────┬─────────────────▼────────────┬──────────────┐   │
-│  │ PostgreSQL     │ Volumen: /proyectos          │ Horizon      │   │
-│  │ (datos         │ (carpetas locales del user)  │ Workers      │   │
-│  │  compartidos)  │                              │              │   │
-│  └───────────────┴──────────────────────────────┴──────────────┘   │
-└──────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────┐
+│  Nginx                                                                    │
+│  ┌──────────────────┐  ┌────────────────────────────────────────────┐    │
+│  │ Frontend           │  │ API REST (JSON)                            │    │
+│  │ Alpine.js + Tail.  │  │ /api/proyectos                             │    │
+│  │ Componentes reutil.│  │ /api/apps                                  │    │
+│  │                    │  │ /api/modulos                               │    │
+│  │                    │  │ /api/funcionalidades                       │    │
+│  │                    │  │ /api/agentes                               │    │
+│  │                    │  │ /api/tests                                 │    │
+│  │                    │  │ /api/chat                                  │    │
+│  │                    │  │ /api/git                                   │    │
+│  └──────────────────┘  └──────────┬─────────────────────────────────┘    │
+│                                    │                                       │
+│                           ┌────────▼────────┐                             │
+│                           │  Laravel Backend  │                             │
+│                           │  ┌────────────┐   │                             │
+│                           │  │ Auth        │   │  ← Usuarios, roles        │
+│                           │  ├────────────┤   │                             │
+│                           │  │ Controlador │   │                             │
+│                           │  ├────────────┤   │                             │
+│                           │  │ Servicio    │   │                             │
+│                           │  ├────────────┤   │                             │
+│                           │  │ Repositorio │   │                             │
+│                           │  ├────────────┤   │                             │
+│                           │  │ Adaptadores  │   │                             │
+│                           │  │ (IA, Git,   │   │                             │
+│                           │  │  Filesystem)│   │                             │
+│                           │  └────────────┘   │                             │
+│                           └───────────────────┘                             │
+│                                    │                                        │
+│  ┌───────────────┬─────────────────┼────────────────┬──────────────────┐   │
+│  │ PostgreSQL     │ Redis            │ Volumen:       │ Horizon          │   │
+│  │ (datos         │ (cache, colas,   │ /proyectos     │ Workers          │   │
+│  │  compartidos)  │  sesiones)       │ (carpetas      │                  │   │
+│  │                │                  │  locales user) │                  │   │
+│  └───────────────┴──────────────────┴────────────────┴──────────────────┘   │
+└──────────────────────────────────────────────────────────────────────────┘
          ▲                        ▲              ▲
          │                        │              │
-   IA del Sistema        Agentes Programador   Agentes Auditor
+   Spec Designer         Agente Programador  Agente Auditor
 ```
 
 ### Despliegue
@@ -63,26 +64,114 @@ La base de datos (PostgreSQL) reside en el servidor y es compartida por todos lo
 
 > Los archivos de proyecto (.spec.md, código fuente) son locales a cada usuario o se comparten vía Git/carpeta de red. La BD PostgreSQL centraliza metadatos, relaciones, estado de tests y configuración. No hay conflicto porque los archivos y la BD son independientes.
 
+### Infraestructura de Servicios
+
+| Servicio | Rol |
+|---|---|
+| **Nginx** | Proxy reverso, sirve frontend estático y enruta peticiones PHP a PHP-FPM. |
+| **PHP-FPM** | Ejecuta Laravel. Imagen propia (`said-php`) con extensiones: pdo_pgsql, redis, pcntl. |
+| **PostgreSQL 16** | Base de datos relacional. Almacena usuarios, sesiones, cache, jobs, y metadatos del sistema. |
+| **Redis 7** | Cache, driver de colas para Horizon, y almacén de sesiones. |
+| **Horizon** | Workers de Laravel para procesos asíncronos (tests, generación specs, auditoría). Usa Redis como backend. |
+
+### Puesta en Marcha
+
+```bash
+cd app/
+docker compose up -d                  # Levanta todos los servicios
+docker compose exec php php artisan migrate   # Crea tablas en PostgreSQL
+docker compose exec php php artisan db:seed   # Usuario inicial (seeder)
+```
+
+> El `docker-compose.yml` está en `app/docker-compose.yml`. La estructura completa de carpetas está documentada en [SAID-Stack-Specification.md](SAID-Stack-Specification.md).
+
 ---
 
 ## Tipos de IA
 
-### 🤖 IA del Sistema (viene con SAID)
-- Conoce la metodología SAID al 100%.
-- Ayuda a crear proyectos, aplicaciones, módulos, funcionalidades.
-- Se alimenta del contexto del sistema (descripciones, árbol, configuraciones).
-- Única para toda la plataforma.
+SAID utiliza tres IAs especializadas, cada una con un rol distinto en el flujo de trabajo.
 
-### 🤖 Agente Programador (lo crea el usuario)
-- Especializado en tecnologías específicas (Laravel, React, Python, etc.).
-- Genera código y tests basados en las specs.
-- Se asocia a una aplicación concreta.
-- El usuario define su nombre, personalidad, credenciales y especialidad.
+### 📐 Spec Designer
+- Ayuda al usuario a **pensar, estructurar y refinar** el algoritmo de una funcionalidad.
+- Convierte ideas informales ("quiero que el login valide email y mande 2FA") en specs bien formadas con entradas, pasos, dependencias y salidas.
+- Sugiere dependencias, detecta ambigüedades y propone mejoras antes de escribir código.
+- No genera código — solo especifica. Es el arquitecto de la funcionalidad.
+- Se asocia a un proyecto concreto.
 
-### 🤖 Agente Auditor (lo crea el usuario)
-- Misma especialidad técnica que el programador.
-- **No es el mismo agente**: revisa el código generado vs el algoritmo de la spec.
-- Reporta discrepancias sin el sesgo de haber escrito el código.
+### 💻 Agente Programador (creado por el usuario)
+- **Lee la spec** del Spec Designer (o escrita manualmente) y genera el código que la implementa.
+- Especializado en un stack tecnológico (Laravel, React, Python, etc.).
+- Genera el código y la referencia exacta (archivo + línea + función/método).
+- El usuario define: nombre, proveedor IA (OpenAI, Claude, Gemini), credenciales, especialidad, aplicación asociada.
+
+### 🔍 Agente Auditor (creado por el usuario)
+- **Compara el código generado contra el algoritmo** de la spec.
+- Misma especialidad técnica que el programador, pero **no es el mismo agente**.
+- Toma la referencia de código (archivo + línea + función) y verifica paso a paso.
+- Reporta discrepancias: "El paso 3 del algoritmo dice X, pero el código hace Y".
+- Sin sesgo de autoría — no escribió el código que audita.
+
+> La creación de proyectos, aplicaciones y organización del árbol se hace manualmente desde la UI. No se requiere IA para tareas de gestión.
+
+---
+
+---
+
+## Jerarquía del Proyecto
+
+Todo proyecto SAID se organiza así:
+
+```
+Project                          ← Contenedor raíz (ruta en disco)
+ └── App                         ← Entregable (web, mobile, api...)
+      ├── screens/               ← Agrupaciones visuales
+      │    ├── login.screen.md       ← Mockup ligero + refs a Functions
+      │    ├── register.screen.md
+      │    └── dashboard.screen.md
+      └── modules/               ← Lógica de negocio
+           └── auth/             ← Módulo: agrupa Functions relacionadas
+                ├── login.spec.md         ← Function: algoritmo + test
+                ├── register.spec.md
+                ├── sendResetEmail.spec.md
+                └── verify2faCode.spec.md
+```
+
+### Screen
+
+Una **Screen** es la idea visual inicial de una interfaz. No contiene lógica de negocio, solo:
+
+- Mockup ligero (wireframe, descripción de layout).
+- Lista de **referencias a Functions** que la componen.
+- Relaciones con modales, sub-screens o navegación.
+
+```
+Screen "Login"
+ ├── Input: email
+ ├── Input: password
+ ├── Button "Sign in"      → ref a Function login()
+ ├── Link "Forgot?"         → ref a Function sendResetEmail()
+ └── Modal "2FA"           → ref a Function verify2faCode()
+```
+
+- Una Screen puede referenciar Functions de **múltiples módulos**.
+- Una Function puede ser referenciada por **múltiples Screens** (web, mobile, API).
+- Si una modal tiene lógica propia compleja, puede ser una sub-Screen o Screen independiente.
+
+### Module y Function
+
+Un **Module** agrupa Functions por dominio (auth, billing, users…).
+
+Una **Function** es la unidad atómica de SAID:
+
+- Se define en un archivo `.spec.md` con algoritmo, dependencias, test y referencia de código.
+- **Existe una sola vez** en el árbol. Otras partes la referencian.
+- No sabe de Screens. La Screen la referencia a ella, no al revés.
+
+| Relación | Cómo se modela |
+|---|---|
+| Function llamada desde varias Screens | Cada Screen la referencia en su lista |
+| Una Function depende de otra | Se declara en `## 🔗 Dependencias` del `.spec.md` |
+| Varias Functions comparten un servicio | Ese servicio es otra Function referenciada como dependencia |
 
 ---
 
@@ -151,21 +240,159 @@ SAID incluye un sistema de usuarios a nivel de aplicación Laravel:
 
 ## Modelo de Datos
 
-*(por definir — tablas principales: users, proyectos, aplicaciones, modulos, funcionalidades, agentes, tests, dependencias)*
+*(por definir — tablas principales: users, projects, apps, screens, modules, functions, agents, tests, dependencies)*
 
 ## Rutas / APIs
 
 *(por definir — incluyen prefijo /api con middleware auth)*
 
-## Lineamientos Visuales (UI/UX)
+## Línea Gráfica
 
-### Principios
-- **Sencillo y atractivo**: Nada recargado, colores suaves, tipografía clara.
-- **Guía al usuario**: Mensajes y tooltips que expliquen los pasos, especialmente en la primera vez.
-- **Árbol visible siempre**: La navegación jerárquica debe estar presente en todo momento.
-- **Editor de algoritmo amigable**: Herramienta visual para modelar algoritmos sin escribir markdown crudo si no se quiere.
+> *Estándar visual del sistema. Toda pantalla nueva debe seguir estas reglas.*
 
-### Restricciones
-- Solo **Desktop** (monitor). No responsive para celular.
-- Diseñado para resolución mínima 1024x768.
-- Layout con sidebar de navegación + contenido principal.
+---
+
+### Paleta de Colores
+
+Extraída de la mascota SAID. Definida en `public/css/said.css` como CSS custom properties.
+
+| Nombre | Hex | Rol |
+|---|---|---|
+| **Navy** | `#133d5b` | Sidebar, encabezados, degradados oscuros |
+| **Navy light** | `#1a4d72` | Hover sutil sobre navy |
+| **Teal** | `#4eaccf` | Botones principales, links, acentos activos, borde hover de cards (`border-teal/60`) |
+| **Teal light** | `#97e1f7` | Highlights, badges activos, íconos sobre fondos oscuros |
+| **Teal dark** | `#3b8aa8` | Hover de botones teal |
+| **Peach** | `#f5c798` | Acentos cálidos secundarios (ícono Projects) |
+| **Coral** | `#d94e51` | Errores, hover de logout, acciones destructivas |
+| **Warm gray** | `#8f8370` | Texto secundario, descripciones |
+| **Cool gray** | `#c1cbce` | Bordes de cards (`border-cool/50`), placeholders, texto inactivo |
+| **Fondo página** | `#ffffff` | Fondo general del contenido principal |
+
+### Degradados
+
+Los paneles oscuros (sidebar, panel izquierdo de login/install) usan degradado **siempre con `style=` inline**, nunca con clases Tailwind:
+
+```css
+background: linear-gradient(to bottom, #133d5b, #000508);
+```
+
+| Dirección | Uso |
+|---|---|
+| `to bottom` | Sidebar |
+| `to bottom right` | Panel izquierdo de login e install |
+| `to right` | Banners (obsoleto — reemplazado por cards blancas) |
+
+### Tipografía
+
+| Elemento | Tamaño | Peso | Clase Tailwind |
+|---|---|---|---|
+| Heading de página (top bar) | 18px | semibold | `text-lg font-semibold` |
+| Título de sección | 16px | semibold | `text-base font-semibold` |
+| Título de card | 14px | semibold | `text-sm font-semibold` |
+| Texto cuerpo / descripción | 14px | normal | `text-sm` |
+| Texto secundario | 14px | normal | `text-sm text-warm` |
+| Badges "soon" / "Coming soon" | 11-12px | medium | `text-[11px]` / `text-xs` |
+| Sidebar secciones | 12px | semibold | `text-xs font-semibold` |
+| Sidebar ítems | 14px | medium | `text-sm font-medium` |
+
+- Familia: **Inter** (fallback: system-ui, -apple-system, sans-serif).
+- Todo en **inglés**.
+
+### Layouts
+
+#### Layout autenticado (`layouts/app.blade.php`)
+
+```
+┌──────────────┐ ┌──────────────────────────────────────────────┐
+│ Sidebar      │ │ Top bar (header)                             │
+│ 240px        │ ├──────────────────────────────────────────────┤
+│ degradado    │ │                                              │
+│ navy→negro   │ │ max-width: 1280px · mx-auto · px-8 · py-6    │
+│              │ │                                              │
+│ [logo] SAID  │ │ @yield('content')                            │
+│              │ │                                              │
+│ MAIN         │ │                                              │
+│ · Dashboard  │ │                                              │
+│              │ │                                              │
+│ WORKSPACE    │ │                                              │
+│ · Projects   │ │                                              │
+│ · AI Agents  │ │                                              │
+│              │ │                                              │
+│ SETTINGS     │ │                                              │
+│ · API Tokens │ │                                              │
+│              │ │                                              │
+│ [user]       │ │                                              │
+└──────────────┘ └──────────────────────────────────────────────┘
+```
+
+- Sidebar: ancho fijo 240px (`w-60`), degradado navy→negro, texto blanco.
+- Contenido: fondo blanco, ancho máximo 1280px centrado con `mx-auto`.
+- Top bar: fondo blanco, borde inferior cool-gray, altura compacta (`py-2.5`).
+
+#### Layout público — login / install / welcome
+
+```
+┌─────────────────────┐ ┌──────────────────────┐
+│ Panel izquierdo     │ │ Panel derecho        │
+│ Degradado navy→     │ │ Fondo blanco         │
+│ negro (to bottom    │ │ Formulario /         │
+│ right)              │ │ contenido            │
+│                     │ │                      │
+│ [pet.png]           │ │                      │
+│ SAID                │ │                      │
+│ Steps (install)     │ │                      │
+└─────────────────────┘ └──────────────────────┘
+```
+
+- Two-panel: izquierdo 50% con degradado oscuro + mascota, derecho 50% blanco con formulario.
+- Ancho máximo del contenedor: `max-w-4xl` (896px en desktop).
+
+### Componentes
+
+#### Hero (dashboard)
+
+Card blanca con borde inferior teal de 4px. Pet a la izquierda (56px), saludo + descripción, CTAs a la derecha.
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ [pet]  Hello, Name!                     [Create Project] │
+│        Description...                    [Write Spec]    │
+│━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│ ← teal 4px
+└──────────────────────────────────────────────────────────┘
+```
+
+#### Cards "Getting started"
+
+Grid 2×2. Cada card: borde `cool/50`, hover borde `teal/60` + sombra. Ícono 36px en bg de color + título + descripción breve + badge "Coming soon".
+
+#### Badges de estado
+
+- **Sidebar**: pills redondeadas `text-[11px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/40`
+- **Cards**: pills `text-xs px-2 py-0.5 rounded-full bg-slate-50 border border-cool/30 text-cool`
+
+#### Botones
+
+| Tipo | Clases |
+|---|---|
+| Primario | `bg-teal text-white px-4 py-2 rounded-lg hover:bg-teal-dark` |
+| Secundario | `border border-cool text-navy px-4 py-2 rounded-lg hover:border-teal hover:text-teal` |
+
+### Arquitectura CSS
+
+| Capa | Archivo | Qué contiene |
+|---|---|---|
+| **Tailwind CDN** | `cdn.tailwindcss.com` | Utilidades estándar: layout, spacing, tipografía, flex, grid |
+| **said.css** | `public/css/said.css` | Colores custom (CSS custom properties + clases utilitarias + opacidades), estilos globales (body, scrollbar, focus rings, button:disabled) |
+| **Degradados** | `style="..."` inline | Paneles oscuros (navy → `#000508`). No usar clases Tailwind para degradados con colores custom |
+
+> **Regla**: Los colores de la paleta NO se configuran en `tailwind.config` (el CDN no lo resuelve de forma fiable). Van exclusivamente por `said.css` como clases `.bg-teal`, `.text-navy`, `.border-cool`, etc. con todas sus variantes de opacidad (`.bg-teal/15`, `.text-teal-light/70`, etc.).
+
+### Principios de diseño
+
+- **Sencillo y accionable**: El dashboard debe sentirse como herramienta, no como landing decorativa.
+- **Menos texto**: Cards con descripciones de 1 línea. Sin párrafos largos.
+- **Jerarquía clara**: Sidebar oscuro, contenido blanco, CTAs en teal.
+- **Estados visibles**: Badges "soon" / "Coming soon" con estilo consistente en sidebar y cards.
+- **Solo Desktop**: Mínimo 1024px de ancho. No responsive para móvil.
+- **Sidebar siempre visible**: Navegación jerárquica presente en todo momento (árbol de proyectos en el futuro).

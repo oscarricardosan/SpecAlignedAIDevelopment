@@ -29,6 +29,96 @@
 |---|---|---|
 | Servidor Web | **Nginx + PHP-FPM** | Rendimiento, aislamiento, estándar moderno. |
 | Contenedor | **Docker** | Fácil despliegue y portabilidad. |
+| Cache y Colas | **Redis** | Backend de cache, sesiones y driver de colas para Horizon. |
+
+---
+
+## Estructura de Carpetas del Sistema
+
+```
+app/
+├── docker-compose.yml               ← Orquestación de todos los servicios
+├── data/                             ← Volúmenes persistentes
+│   ├── redis/
+│   └── postgres/
+├── docker/                           ← Configuración de contenedores
+│   ├── nginx/
+│   │   └── default.conf             ← Configuración del servidor web
+│   └── php/
+│       └── Dockerfile               ← Imagen PHP-FPM con extensiones
+├── assets/                           ← Recursos gráficos del proyecto
+│   ├── favicon.png
+│   └── pet.png
+└── backend/                          ← Aplicación Laravel
+    ├── app/
+    ├── database/
+    │   ├── migrations/               ← Esquema de tablas
+    │   └── seeders/                  ← Datos iniciales (usuario admin)
+    ├── routes/
+    ├── config/
+    ├── resources/
+    ├── storage/
+    └── tests/
+```
+
+### Servicios Docker
+
+| Servicio | Imagen | Puerto | Descripción |
+|---|---|---|---|
+| `app` | nginx:stable-alpine | 80 | Servidor web, proxy hacia PHP-FPM |
+| `php` | said-php (build local) | — | PHP-FPM 8.3 con extensiones pdo_pgsql, redis, pcntl |
+| `horizon` | said-horizon (build local) | — | Workers de Laravel Horizon para procesos en 2do plano |
+| `redis` | redis:7-alpine | 6379 | Cache y driver de colas para Horizon |
+| `postgres` | postgres:16-alpine | 5432 | Base de datos PostgreSQL |
+
+### Variables de Entorno de BD (docker-compose)
+
+| Variable | Valor por defecto |
+|---|---|
+| `DB_CONNECTION` | `pgsql` |
+| `DB_HOST` | `postgres` |
+| `DB_PORT` | `5432` |
+| `DB_DATABASE` | `said` |
+| `DB_USERNAME` | `said` |
+| `DB_PASSWORD` | `said_secret` |
+
+---
+
+## Proceso de Instalación
+
+### Primer arranque
+
+```bash
+cd app/
+docker compose up -d
+```
+
+### Setup de base de datos y usuario
+
+Una vez los contenedores están arriba:
+
+```bash
+# Ejecutar migraciones (crea tablas: users, sessions, cache, jobs)
+docker compose exec php php artisan migrate
+
+# Sembrar datos iniciales (crea usuario administrador por defecto)
+docker compose exec php php artisan db:seed
+```
+
+> El seeder `DatabaseSeeder` crea un usuario de prueba. Para producción debe personalizarse con el usuario administrador real y roles del sistema (Admin, Programador, Auditor).
+
+### Verificar instalación
+
+```bash
+# Salud de los servicios
+docker compose ps
+
+# Probar conexión a BD
+docker compose exec php php artisan db:show
+
+# Probar Redis
+docker compose exec redis redis-cli ping
+```
 
 ### Integraciones
 

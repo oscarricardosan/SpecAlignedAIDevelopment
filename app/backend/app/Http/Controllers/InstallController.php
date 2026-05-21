@@ -33,7 +33,7 @@ class InstallController extends Controller
                 PDO::ATTR_TIMEOUT => 5,
             ]);
         } catch (\PDOException $e) {
-            return back()->withErrors(["db_connection" => "No se pudo conectar a PostgreSQL. Verificá los datos."])->withInput();
+            return back()->withErrors(["db_connection" => "Could not connect to PostgreSQL. Please check your credentials."])->withInput();
         }
 
         $this->writeEnv([
@@ -78,7 +78,7 @@ class InstallController extends Controller
         try {
             Artisan::call("migrate", ["--force" => true]);
         } catch (\Exception $e) {
-            return back()->withErrors(["migration" => "Error al ejecutar migraciones: " . $e->getMessage()]);
+            return back()->withErrors(["migration" => "Migration error: " . $e->getMessage()]);
         }
 
         User::create([
