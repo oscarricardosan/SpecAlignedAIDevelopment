@@ -63,18 +63,13 @@
 </div>
 
 @if ($postInstall)
-    <div class="bg-slate-50 rounded-lg p-4 mb-4">
-        <p class="text-sm font-medium text-navy mb-2">How to fix this</p>
-        <ol class="text-sm text-warm space-y-1 list-decimal list-inside">
-            <li>Edit <code class="bg-slate-100 px-1 rounded font-mono text-xs">app/.env</code> and set a valid path:
-                <code class="block bg-slate-100 px-2 py-1 rounded font-mono text-xs mt-1">SAID_ROOT=/your/real/projects/path</code>
-            </li>
-            <li>Restart Docker Compose:
-                <code class="block bg-slate-100 px-2 py-1 rounded font-mono text-xs mt-1">cd app && docker compose down && docker compose up -d</code>
-            </li>
-            <li>Reload this page.</li>
-        </ol>
-    </div>
+    <p class="text-sm text-warm mb-4">
+        <a href="/install/storage" class="text-teal hover:underline font-medium">Go back to the storage setup</a>
+        to reconfigure the path, then restart Docker Compose.
+    </p>
+    <p class="text-xs text-cool mb-6">
+        Once the containers are back up, reload this page.
+    </p>
     <form action="/dashboard" method="GET" class="mt-6">
         <button type="submit"
                 class="w-full bg-teal text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-teal-dark transition shadow-sm {{ $mounted ? '' : 'opacity-50 cursor-not-allowed' }}"

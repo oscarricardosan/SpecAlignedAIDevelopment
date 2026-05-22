@@ -36,6 +36,7 @@ services:
       - S3_SECRET=said_secret
       - S3_BUCKET=said-specs
       - S3_REGION=us-east-1
+      - SAID_ROOT
     depends_on:
       - postgres
       - minio

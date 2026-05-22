@@ -1,2 +1,4 @@
 Omitir archivo, este es para el usuario no para la IA
 
+Haz git push con los cambios del setup que se hicieron
+

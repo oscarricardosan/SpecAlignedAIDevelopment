@@ -85,8 +85,10 @@ class InstallController extends Controller
             "S3_SECRET"    => $data["s3_secret"],
             "S3_BUCKET"    => $data["s3_bucket"],
             "S3_REGION"    => $data["s3_region"] ?? "us-east-1",
-            "SAID_ROOT"    => $data["said_root"],
         ]);
+
+        // Remove SAID_ROOT from Laravel .env — it's injected by Docker at runtime
+        $this->removeEnvKey("SAID_ROOT");
 
         // Also write SAID_ROOT to /said-setup/.env so docker-compose can read it on restart
         $this->writeDockerComposeEnv([
@@ -103,15 +105,23 @@ class InstallController extends Controller
         if (!session("said_root_expected")) {
             return redirect("/install/storage");
         }
+
+        $saidRoot   = env("SAID_ROOT", "");
+        $isPlaceholder = $saidRoot === "/choose-your-projects-path" || $saidRoot === "";
+        $mounted    = !$isPlaceholder && is_dir("/said-projects") && is_readable("/said-projects");
+
         return view("install.restart", [
             "said_root" => session("said_root_expected"),
-            "mounted"   => is_dir("/said-projects") && is_readable("/said-projects"),
+            "mounted"   => $mounted,
         ]);
     }
 
     public function saveRestart()
     {
-        if (!is_dir("/said-projects") || !is_readable("/said-projects")) {
+        $saidRoot      = env("SAID_ROOT", "");
+        $isPlaceholder = $saidRoot === "/choose-your-projects-path" || $saidRoot === "";
+
+        if ($isPlaceholder || !is_dir("/said-projects") || !is_readable("/said-projects")) {
             return back()->withErrors(["restart" => "The projects folder is still not mounted. Please restart Docker containers first."]);
         }
 
@@ -172,6 +182,14 @@ class InstallController extends Controller
             }
         }
 
+        file_put_contents($path, $content);
+    }
+
+    private function removeEnvKey(string $key): void
+    {
+        $path = base_path(".env");
+        $content = file_get_contents($path);
+        $content = preg_replace("/^" . preg_quote($key, "/") . "=.*\n?/m", "", $content);
         file_put_contents($path, $content);
     }
 
