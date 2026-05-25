@@ -1,157 +1,397 @@
 @extends('layouts.app')
 
-@section('title', 'New Project')
-@section('heading', 'New Project')
-@section('subheading', 'Set the foundation — this context will guide your AI agents')
+@section('title', isset($project) ? 'Edit Project' : 'New Project')
+@section('heading', isset($project) ? 'Edit Project' : 'New Project')
+@section('subheading', isset($project) ? 'Update project configuration' : 'Set the foundation — this context will guide your AI agents')
 
 @section('content')
 
-<form action="/projects" method="POST" class="max-w-3xl space-y-8">
+<div x-data="folderBrowser()" x-init="selectedPath = '{{ old('path', $project->path ?? '') }}'">
+
+<form action="{{ isset($project) ? route('projects.update', $project) : route('projects.store') }}" method="POST" class="max-w-3xl space-y-8"
+      x-data="{ submitting: false }" @submit="submitting = true">
     @csrf
+    @if (isset($project))
+        @method('PUT')
+    @endif
 
     {{-- Identity --}}
-    <div class="bg-white rounded-xl border border-cool/50 shadow-sm overflow-hidden">
-        <div class="px-5 py-3 border-b border-cool/30 bg-slate-50/50">
-            <h2 class="text-sm font-semibold text-navy flex items-center gap-2">
-                <svg class="w-4 h-4 text-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
-                Identity
-            </h2>
-        </div>
-        <div class="p-5 space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-navy mb-1">Project name <span class="text-coral">*</span></label>
-                <input name="name" type="text"
-                       class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy placeholder:text-cool focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition bg-white"
-                       placeholder="e.g. SAID Platform, E-Commerce Backend" required>
+    <div class="card bg-base-100 border border-cool/50 shadow-sm">
+        <div class="card-body p-0">
+            <div class="px-5 py-3 border-b border-cool/30 bg-slate-50/50 rounded-t-xl">
+                <h2 class="text-sm font-semibold text-navy flex items-center gap-2">
+                    <iconify-icon icon="heroicons:tag" class="w-4 h-4 text-teal"></iconify-icon>
+                    Identity
+                </h2>
             </div>
-            <div>
-                <label class="block text-sm font-medium text-navy mb-1">Project path <span class="text-coral">*</span></label>
-                <input name="path" type="text"
-                       class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy placeholder:text-cool focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition bg-white"
-                       placeholder="e.g. /home/user/projects/my-project" required>
-                <p class="text-xs text-cool mt-1">Filesystem path where the project files live. The AI agents will read/write from this location.</p>
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-navy mb-1">Short description</label>
-                <textarea name="description" rows="2"
-                          class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy placeholder:text-cool focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition bg-white"
-                          placeholder="What is this project about? This helps the AI understand the domain."></textarea>
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-navy mb-1">Project name <span class="text-coral">*</span></label>
+                    <input name="name" type="text" value="{{ old('name', $project->name ?? '') }}"
+                           class="input input-bordered w-full bg-white text-sm text-navy placeholder:text-cool/60 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition duration-200{{ $errors->has('name') ? ' input-error' : '' }}"
+                           placeholder="e.g. SAID Platform, E-Commerce Backend" required>
+                    @error('name')
+                        <p class="text-xs text-coral mt-1 flex items-center gap-1">
+                            <iconify-icon icon="heroicons:exclamation-circle" class="w-3.5 h-3.5 shrink-0"></iconify-icon>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
+                @if (isset($project))
+                <div>
+                    <label class="block text-sm font-medium text-navy mb-1">Project path</label>
+                    <p class="text-sm text-warm font-mono bg-slate-50 border border-cool/30 rounded-lg px-3 py-2.5">{{ $project->path }}</p>
+                    <p class="text-xs text-cool mt-1">Path cannot be changed after project creation.</p>
+                </div>
+                @else
+                <div>
+                    <label class="block text-sm font-medium text-navy mb-1">Project path <span class="text-coral">*</span></label>
+                    <div class="relative">
+                        <input name="path" type="text" x-model="selectedPath" required readonly
+                               @click="open = true; $nextTick(() => $refs.folderModal?.showModal())"
+                               class="input input-bordered w-full pl-10 bg-white text-sm text-navy placeholder:text-cool/60 cursor-pointer focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition duration-200{{ $errors->has('path') ? ' input-error' : '' }}"
+                               placeholder="Click to browse the projects folder&hellip;">
+                        <iconify-icon icon="heroicons:folder" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-cool"></iconify-icon>
+                    </div>
+                    @error('path')
+                        <p class="text-xs text-coral mt-1 flex items-center gap-1">
+                            <iconify-icon icon="heroicons:exclamation-circle" class="w-3.5 h-3.5 shrink-0"></iconify-icon>
+                            {{ $message }}
+                        </p>
+                    @else
+                        <p class="text-xs text-cool mt-1">Select the folder where this project's source code lives.</p>
+                    @enderror
+                </div>
+                @endif
+                <div>
+                    <label class="block text-sm font-medium text-navy mb-1">Short description</label>
+                    <textarea name="description" rows="2"
+                              class="textarea textarea-bordered w-full bg-white text-sm text-navy placeholder:text-cool/60 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition duration-200{{ $errors->has('description') ? ' textarea-error' : '' }}"
+                              placeholder="What is this project about? This helps the AI understand the domain.">{{ old('description', $project->description ?? '') }}</textarea>
+                    @error('description')
+                        <p class="text-xs text-coral mt-1 flex items-center gap-1">
+                            <iconify-icon icon="heroicons:exclamation-circle" class="w-3.5 h-3.5 shrink-0"></iconify-icon>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </div>
             </div>
         </div>
     </div>
 
     {{-- Business context --}}
-    <div class="bg-white rounded-xl border border-cool/50 shadow-sm overflow-hidden">
-        <div class="px-5 py-3 border-b border-cool/30 bg-slate-50/50">
-            <h2 class="text-sm font-semibold text-navy flex items-center gap-2">
-                <svg class="w-4 h-4 text-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                Business context
-            </h2>
-            <p class="text-xs text-warm mt-0.5 ml-6">This information gives AI agents domain awareness when writing specs and code.</p>
-        </div>
-        <div class="p-5 space-y-4">
-            <div>
-                <label class="block text-sm font-medium text-navy mb-1">System criticality <span class="text-coral">*</span></label>
-                <select name="criticality"
-                        class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy bg-white focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition" required>
-                    <option value="" disabled selected>Select how critical this system is</option>
-                    <option value="mission_critical">Mission Critical — downtime causes severe impact</option>
-                    <option value="business_important">Business Important — affects daily operations</option>
-                    <option value="administrative">Administrative — supports internal processes</option>
-                    <option value="experimental">Experimental — proof of concept or internal tool</option>
-                </select>
-                <p class="text-xs text-cool mt-1">Helps the AI prioritize reliability, testing depth, and audit strictness.</p>
+    <div class="card bg-base-100 border border-cool/50 shadow-sm">
+        <div class="card-body p-0">
+            <div class="px-5 py-3 border-b border-cool/30 bg-slate-50/50 rounded-t-xl">
+                <h2 class="text-sm font-semibold text-navy flex items-center gap-2">
+                    <iconify-icon icon="heroicons:briefcase" class="w-4 h-4 text-teal"></iconify-icon>
+                    Business context
+                </h2>
+                <p class="text-xs text-warm mt-0.5 ml-6">This information gives AI agents domain awareness when writing specs and code.</p>
             </div>
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-navy mb-1">System criticality <span class="text-coral">*</span></label>
+                    <select name="criticality"
+                            class="select select-bordered w-full bg-white text-sm text-navy focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition duration-200{{ $errors->has('criticality') ? ' select-error' : '' }}" required>
+                        <option value="" disabled {{ old('criticality', $project->criticality ?? '') === '' ? 'selected' : '' }}>Select how critical this system is</option>
+                    @foreach (\App\Support\Label::options('criticality') as $val => $label)
+                        <option value="{{ $val }}" {{ old('criticality', $project->criticality ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                    </select>
+                    @error('criticality')
+                        <p class="text-xs text-coral mt-1 flex items-center gap-1">
+                            <iconify-icon icon="heroicons:exclamation-circle" class="w-3.5 h-3.5 shrink-0"></iconify-icon>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                    <p class="text-xs text-cool mt-1">Helps the AI prioritize reliability, testing depth, and audit strictness.</p>
+                </div>
 
-            <div>
-                <label class="block text-sm font-medium text-navy mb-1">Business sector <span class="text-coral">*</span></label>
-                <select name="business_sector"
-                        class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy bg-white focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition" required>
-                    <option value="" disabled selected>Select the industry or domain</option>
-                    <option value="finance">Finance &amp; Banking</option>
-                    <option value="healthcare">Healthcare</option>
-                    <option value="education">Education</option>
-                    <option value="ecommerce">E-commerce &amp; Retail</option>
-                    <option value="logistics">Logistics &amp; Transport</option>
-                    <option value="government">Government &amp; Public Sector</option>
-                    <option value="entertainment">Entertainment &amp; Media</option>
-                    <option value="manufacturing">Manufacturing &amp; Industry</option>
-                    <option value="other">Other / Not listed</option>
-                </select>
-                <p class="text-xs text-cool mt-1">Sets domain language, entity naming conventions, and common patterns.</p>
+                <div>
+                    <label class="block text-sm font-medium text-navy mb-1">Business sector <span class="text-coral">*</span></label>
+                    <select name="business_sector"
+                            class="select select-bordered w-full bg-white text-sm text-navy focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition duration-200{{ $errors->has('business_sector') ? ' select-error' : '' }}" required>
+                        <option value="" disabled {{ old('business_sector', $project->business_sector ?? '') === '' ? 'selected' : '' }}>Select the industry or domain</option>
+                    @foreach (\App\Support\Label::options('business_sector') as $val => $label)
+                        <option value="{{ $val }}" {{ old('business_sector', $project->business_sector ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                    </select>
+                    @error('business_sector')
+                        <p class="text-xs text-coral mt-1 flex items-center gap-1">
+                            <iconify-icon icon="heroicons:exclamation-circle" class="w-3.5 h-3.5 shrink-0"></iconify-icon>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                    <p class="text-xs text-cool mt-1">Sets domain language, entity naming conventions, and common patterns.</p>
+                </div>
             </div>
         </div>
     </div>
 
     {{-- Compliance & audience --}}
-    <div class="bg-white rounded-xl border border-cool/50 shadow-sm overflow-hidden">
-        <div class="px-5 py-3 border-b border-cool/30 bg-slate-50/50">
-            <h2 class="text-sm font-semibold text-navy flex items-center gap-2">
-                <svg class="w-4 h-4 text-teal" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                Compliance &amp; audience
-            </h2>
-        </div>
-        <div class="p-5 space-y-5">
-            <fieldset>
-                <legend class="text-sm font-medium text-navy mb-2">Compliance requirements</legend>
-                <p class="text-xs text-warm mb-3">Select all that apply. The AI will enforce relevant standards in generated code.</p>
-                <div class="space-y-2">
-                    @php
-                    $compliance = [
-                        'none'  => ['None', 'No regulatory requirements apply'],
-                        'gdpr'  => ['GDPR', 'European data protection — governs how personal data is collected, stored, and processed'],
-                        'hipaa' => ['HIPAA', 'US healthcare law — protects patient health information and sets security standards'],
-                        'pci_dss' => ['PCI-DSS', 'Payment card security — required when handling credit card transactions'],
-                        'soc2'  => ['SOC 2', 'Service organization controls — audits security, availability, and confidentiality'],
-                        'iso_27001' => ['ISO 27001', 'Global information security standard — certifies your ISMS meets best practices'],
-                    ];
-                    @endphp
-                    @foreach ($compliance as $val => $info)
-                    <label class="flex items-start gap-2 px-3 py-2 border border-cool/40 rounded-lg cursor-pointer hover:border-teal/50 transition text-sm text-navy">
-                        <input type="checkbox" name="compliance[]" value="{{ $val }}" class="mt-0.5 rounded border-cool text-teal focus:ring-teal shrink-0">
-                        <div>
-                            <span class="font-medium">{{ $info[0] }}</span>
-                            <span class="text-xs text-warm ml-1">— {{ $info[1] }}</span>
-                        </div>
-                    </label>
-                    @endforeach
-                </div>
-            </fieldset>
+    <div class="card bg-base-100 border border-cool/50 shadow-sm">
+        <div class="card-body p-0">
+            <div class="px-5 py-3 border-b border-cool/30 bg-slate-50/50 rounded-t-xl">
+                <h2 class="text-sm font-semibold text-navy flex items-center gap-2">
+                    <iconify-icon icon="heroicons:shield-check" class="w-4 h-4 text-teal"></iconify-icon>
+                    Compliance &amp; audience
+                </h2>
+            </div>
+            <div class="p-5 space-y-5">
+                <fieldset>
+                    <legend class="text-sm font-medium text-navy mb-2">Compliance requirements</legend>
+                    <p class="text-xs text-warm mb-3">Select all that apply. The AI will enforce relevant standards in generated code.</p>
+                    <div class="space-y-2">
+                        @php
+                        $selectedCompliance = old('compliance', isset($project) ? $project->compliances->pluck('compliance')->toArray() : []);
+                        @endphp
+                        @foreach (\App\Support\Label::options('compliance') as $val => $info)
+                        <label class="flex items-start gap-2 px-3 py-2 border border-cool/40 rounded-lg cursor-pointer hover:border-teal/50 transition duration-200 text-sm text-navy has-[:checked]:border-teal/60 has-[:checked]:bg-teal/5">
+                            <input type="checkbox" name="compliance[]" value="{{ $val }}" class="checkbox checkbox-sm border-cool text-teal focus:ring-teal mt-0.5"
+                                   {{ in_array($val, $selectedCompliance) ? 'checked' : '' }}>
+                            <div>
+                                <span class="font-medium">{{ \App\Support\Label::humanize($val) }}</span>
+                                <span class="text-xs text-warm ml-1">— {{ str_replace(\App\Support\Label::humanize($val) . ' — ', '', $info) }}</span>
+                            </div>
+                        </label>
+                        @endforeach
+                    </div>
+                </fieldset>
 
-            <fieldset>
-                <legend class="text-sm font-medium text-navy mb-2">Target audience <span class="text-coral">*</span></legend>
-                <p class="text-xs text-warm mb-3">Who will use this system? Influences UX tone, auth patterns, and scalability.</p>
-                <div class="grid grid-cols-2 gap-2">
-                    @php
-                    $audiences = [
-                        'internal' => ['Internal', 'Employees or staff within your organization'],
-                        'b2b'      => ['B2B', 'Other businesses or enterprise clients'],
-                        'b2c'      => ['B2C', 'End consumers, general public'],
-                        'public'   => ['Public', 'Anyone — no authentication required'],
-                    ];
-                    @endphp
-                    @foreach ($audiences as $val => $info)
-                    <label class="flex items-start gap-3 px-4 py-3 border border-cool/40 rounded-lg cursor-pointer hover:border-teal/50 transition">
-                        <input type="radio" name="target_audience" value="{{ $val }}" class="mt-0.5 text-teal focus:ring-teal" {{ $val === 'internal' ? 'checked' : '' }}>
-                        <div>
-                            <span class="text-sm font-medium text-navy">{{ $info[0] }}</span>
-                            <p class="text-xs text-warm mt-0.5">{{ $info[1] }}</p>
-                        </div>
-                    </label>
-                    @endforeach
-                </div>
-            </fieldset>
+                <fieldset>
+                    <legend class="text-sm font-medium text-navy mb-2">Target audience <span class="text-coral">*</span></legend>
+                    <p class="text-xs text-warm mb-3">Who will use this system? Influences UX tone, auth patterns, and scalability.</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        @php
+                        $selectedAudience = old('target_audience', $project->target_audience ?? 'internal');
+                        @endphp
+                        @foreach (\App\Support\Label::options('target_audience') as $val => $info)
+                        <label class="flex items-start gap-3 px-4 py-3 border border-cool/40 rounded-lg cursor-pointer hover:border-teal/50 transition duration-200 has-[:checked]:border-teal/60 has-[:checked]:bg-teal/5">
+                            <input type="radio" name="target_audience" value="{{ $val }}" class="radio radio-sm text-teal focus:ring-teal mt-0.5"
+                                   {{ $selectedAudience === $val ? 'checked' : '' }}>
+                            <div>
+                                <span class="text-sm font-medium text-navy">{{ \App\Support\Label::humanize($val) }}</span>
+                                <p class="text-xs text-warm mt-0.5">{{ str_replace(\App\Support\Label::humanize($val) . ' — ', '', $info) }}</p>
+                            </div>
+                        </label>
+                        @endforeach
+                    </div>
+                    @error('target_audience')
+                        <p class="text-xs text-coral mt-2 flex items-center gap-1">
+                            <iconify-icon icon="heroicons:exclamation-circle" class="w-3.5 h-3.5 shrink-0"></iconify-icon>
+                            {{ $message }}
+                        </p>
+                    @enderror
+                </fieldset>
+            </div>
         </div>
     </div>
 
     {{-- Submit --}}
     <div class="flex items-center gap-3">
         <button type="submit"
-                class="bg-teal text-white rounded-lg px-6 py-2.5 text-sm font-medium hover:bg-teal-dark transition shadow-sm">
-            Create project
+                :disabled="submitting"
+                class="btn btn-primary disabled:opacity-60 disabled:cursor-not-allowed transition duration-200">
+            <span x-show="!submitting">{{ isset($project) ? 'Save changes' : 'Create project' }}</span>
+            <span x-show="submitting" class="flex items-center gap-2">
+                <iconify-icon icon="svg-spinners:180-ring" class="w-4 h-4"></iconify-icon>
+                {{ isset($project) ? 'Saving…' : 'Creating…' }}
+            </span>
         </button>
-        <a href="/projects" class="text-sm text-warm hover:text-navy transition">Cancel</a>
+        <a href="{{ route('projects.index') }}" class="btn btn-ghost text-sm text-warm hover:text-navy transition duration-200">Cancel</a>
     </div>
 </form>
+
+{{-- Folder browser modal — DaisyUI --}}
+<dialog x-ref="folderModal" class="modal" @click.self="open = false; $refs.folderModal?.close()" @close="open = false">
+    <div class="modal-box max-w-lg p-0 flex flex-col max-h-[80vh] overflow-hidden" @click.stop @keydown.enter.prevent>
+        {{-- Header --}}
+        <div class="flex items-center justify-between px-5 py-3 border-b border-cool/30 bg-slate-50/50 shrink-0 rounded-t-2xl">
+            <h3 class="text-sm font-semibold text-navy flex items-center gap-2">
+                <iconify-icon icon="heroicons:folder-open" class="w-4 h-4 text-teal"></iconify-icon>
+                Browse projects folder
+            </h3>
+            <button type="button" @click="open = false; $refs.folderModal?.close()" class="btn btn-ghost btn-xs btn-circle transition duration-200">
+                <iconify-icon icon="heroicons:x-mark" class="w-4 h-4"></iconify-icon>
+            </button>
+        </div>
+
+        {{-- Breadcrumbs --}}
+        <nav class="flex items-center gap-1 px-5 py-2 text-sm text-warm flex-wrap border-b border-cool/20 shrink-0" aria-label="Breadcrumb">
+            <template x-for="(crumb, idx) in breadcrumbs" :key="crumb.path">
+                <span class="flex items-center gap-1">
+                    <span x-show="idx > 0" class="text-cool/50">/</span>
+                    <button type="button" @click="navigate(crumb.path)"
+                            :class="idx === breadcrumbs.length - 1 ? 'text-navy font-semibold cursor-default' : 'text-teal hover:underline cursor-pointer'"
+                            class="transition duration-200"
+                            x-text="crumb.label"></button>
+                </span>
+            </template>
+        </nav>
+
+        {{-- Body --}}
+        <div class="flex-1 overflow-y-auto p-3 min-h-0">
+            {{-- Skeleton loading --}}
+            <div x-show="loading" class="space-y-1 py-1">
+                <template x-for="n in 5" :key="n">
+                    <div class="flex items-center gap-2.5 px-3 py-2">
+                        <div class="w-4 h-4 rounded bg-cool/20 animate-pulse shrink-0"></div>
+                        <div class="h-3.5 rounded bg-cool/15 animate-pulse flex-1"></div>
+                    </div>
+                </template>
+            </div>
+
+            <div x-show="error" x-cloak class="text-sm text-coral py-4 text-center" x-text="error"></div>
+
+            <div x-show="!loading && !error" class="space-y-0.5">
+                {{-- Parent folder --}}
+                <template x-if="breadcrumbs.length > 1">
+                    <button type="button" @click="goUp()"
+                            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-cool hover:text-teal hover:bg-teal/10 transition duration-200 text-left font-medium">
+                        <iconify-icon icon="heroicons:arrow-up" class="w-4 h-4 shrink-0"></iconify-icon>
+                        ..
+                    </button>
+                </template>
+
+                <template x-if="items.length === 0">
+                    <p class="text-sm text-cool p-4 text-center italic">This folder is empty. Create a subfolder or select it.</p>
+                </template>
+                <template x-for="item in items" :key="item.path">
+                    <button type="button" @click="navigate(item.path)"
+                            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-navy hover:bg-teal/10 transition duration-200 text-left">
+                        <iconify-icon icon="heroicons:folder" class="w-4 h-4 text-peach shrink-0"></iconify-icon>
+                        <span x-text="item.name"></span>
+                    </button>
+                </template>
+            </div>
+        </div>
+
+        {{-- Footer --}}
+        <div class="border-t border-cool/20 px-4 py-3 flex items-center gap-3 shrink-0 bg-slate-50/30">
+            <div class="flex items-center gap-2 flex-1">
+                <button type="button" @click="creating = !creating; if(creating) $nextTick(() => $refs.newFolderInput?.focus())"
+                        class="btn btn-ghost btn-xs text-teal transition duration-200"
+                        x-text="creating ? 'Cancel' : '+ New folder'"></button>
+                <template x-if="creating">
+                    <div class="flex items-center gap-1.5 flex-1">
+                        <input type="text" x-model="newFolderName" x-ref="newFolderInput"
+                               @keydown.enter.prevent="createFolder()"
+                               placeholder="Folder name"
+                               class="input input-bordered input-xs flex-1 bg-white text-sm text-navy placeholder:text-cool/60 focus:outline-none focus:border-teal transition duration-200">
+                        <button type="button" @click="createFolder()"
+                                class="btn btn-primary btn-xs transition duration-200">
+                            Create
+                        </button>
+                    </div>
+                </template>
+            </div>
+            <template x-if="currentPath !== ''">
+                <button type="button" @click="selectCurrent(); open = false; $refs.folderModal?.close()"
+                        class="btn btn-neutral btn-sm gap-1 transition duration-200">
+                    <iconify-icon icon="heroicons:check" class="w-4 h-4"></iconify-icon>
+                    Select this folder
+                </button>
+            </template>
+            <template x-if="currentPath === ''">
+                <span class="text-sm text-warm">Navigate into a folder to select it</span>
+            </template>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button @click="open = false">close</button>
+    </form>
+</dialog>
+
+</div>
+
+<script>
+function folderBrowser() {
+    return {
+        open: false,
+        currentPath: '',
+        currentFullPath: '',
+        selectedPath: '',
+        items: [],
+        breadcrumbs: [],
+        loading: false,
+        error: '',
+        creating: false,
+        newFolderName: '',
+
+        init() {
+            this.browse('');
+        },
+
+        async browse(path) {
+            this.loading = true;
+            this.error = '';
+            this.items = [];
+            try {
+                const res = await fetch(`{{ route('api.filesystem.browse') }}?path=${encodeURIComponent(path)}`);
+                if (!res.ok) {
+                    const body = await res.json().catch(() => ({}));
+                    throw new Error(body.error || 'Could not load folder contents.');
+                }
+                const data = await res.json();
+                this.currentPath = data.path;
+                this.currentFullPath = data.full_path;
+                this.breadcrumbs = data.breadcrumbs;
+                this.items = data.items;
+            } catch (e) {
+                this.error = e.message;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        goUp() {
+            if (this.breadcrumbs.length > 1) {
+                const parent = this.breadcrumbs[this.breadcrumbs.length - 2];
+                this.navigate(parent.path);
+            }
+        },
+
+        navigate(path) {
+            this.creating = false;
+            this.newFolderName = '';
+            this.browse(path);
+        },
+
+        selectCurrent() {
+            this.selectedPath = this.currentFullPath;
+        },
+
+        async createFolder() {
+            const name = this.newFolderName.trim();
+            if (!name) return;
+
+            this.error = '';
+            try {
+                const res = await fetch('{{ route('api.filesystem.directory.create') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ path: this.currentPath, name }),
+                });
+
+                if (!res.ok) {
+                    const body = await res.json().catch(() => ({}));
+                    throw new Error(body.error || 'Could not create folder.');
+                }
+
+                this.newFolderName = '';
+                this.creating = false;
+                await this.browse(this.currentPath);
+            } catch (e) {
+                this.error = e.message;
+            }
+        },
+    };
+}
+</script>
 
 @endsection

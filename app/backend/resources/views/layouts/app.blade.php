@@ -6,9 +6,15 @@
     <title>SAID — @yield('title', 'Dashboard')</title>
     <link rel="icon" type="image/png" href="/assets/favicon.png">
     <script src="https://cdn.tailwindcss.com?v=2"></script>
-    <link rel="stylesheet" href="/css/said.css?v=7">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@2/dist/iconify-icon.min.js"></script>
+    <link rel="stylesheet" href="/css/said.css?v=9">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
-<body class="min-h-screen flex text-navy">
+<body class="min-h-screen flex text-navy"
+      x-data="keyboardShortcuts()"
+      @keydown.window="handle($event)">
 
     {{-- Sidebar --}}
     <aside class="w-60 flex flex-col shrink-0 min-h-screen text-white" style="background: linear-gradient(to bottom, #133d5b, #000508)">
@@ -31,42 +37,34 @@
                     : 'text-white/60 hover:bg-white/5 hover:text-white border-transparent';
             @endphp
 
-            <a href="/dashboard"
-               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('dashboard') }} transition">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                </svg>
+            <a href="{{ route('dashboard') }}"
+               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('dashboard') }} transition duration-200">
+                <iconify-icon icon="heroicons:home" class="w-4 h-4 shrink-0"></iconify-icon>
                 Dashboard
             </a>
 
             <p class="px-3 pt-4 pb-1.5 text-xs font-semibold text-white/25 uppercase tracking-widest">Workspace</p>
 
-            <a href="/projects"
-               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('projects*') }} transition">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
-                </svg>
+            <a href="{{ route('projects.index') }}"
+               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('projects*') }} transition duration-200">
+                <iconify-icon icon="heroicons:folder" class="w-4 h-4 shrink-0"></iconify-icon>
                 <span>Projects</span>
             </a>
 
             <a href="#"
-               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('agents*') }} transition">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                </svg>
+               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('agents*') }} transition duration-200">
+                <iconify-icon icon="heroicons:cpu-chip" class="w-4 h-4 shrink-0"></iconify-icon>
                 <span>AI Agents</span>
-                <span class="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/40 font-medium">soon</span>
+                <span class="badge badge-xs badge-ghost text-white/40 ml-auto">soon</span>
             </a>
 
             <p class="px-3 pt-4 pb-1.5 text-xs font-semibold text-white/25 uppercase tracking-widest">Settings</p>
 
             <a href="#"
-               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('tokens*') }} transition">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                </svg>
+               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('tokens*') }} transition duration-200">
+                <iconify-icon icon="heroicons:key" class="w-4 h-4 shrink-0"></iconify-icon>
                 <span>API Tokens</span>
-                <span class="ml-auto text-[10px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/40 font-medium">soon</span>
+                <span class="badge badge-xs badge-ghost text-white/40 ml-auto">soon</span>
             </a>
         </nav>
 
@@ -80,13 +78,12 @@
                     <p class="text-sm font-medium text-white truncate">{{ Auth::user()->name ?? 'User' }}</p>
                     <p class="text-xs text-white/40 truncate">{{ Auth::user()->email ?? '' }}</p>
                 </div>
-                <form action="/logout" method="POST" class="shrink-0">
+                <form action="{{ route('logout') }}" method="POST" class="shrink-0">
                     @csrf
-                    <button type="submit" title="Sign out"
-                            class="text-white/20 hover:text-coral transition p-1 rounded">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
+                    <button type="submit"
+                            class="tooltip tooltip-right text-white/20 hover:text-coral transition duration-200 p-1 rounded"
+                            data-tip="Sign out">
+                        <iconify-icon icon="heroicons:arrow-right-start-on-rectangle" class="w-4 h-4"></iconify-icon>
                     </button>
                 </form>
             </div>
@@ -95,6 +92,28 @@
 
     {{-- Main content --}}
     <main class="flex-1 min-w-0 bg-white">
+        {{-- Toast container --}}
+        <div x-data="toastManager()" x-init="init()" class="fixed top-4 right-4 z-[100] flex flex-col gap-2 max-w-sm w-full pointer-events-none">
+            <template x-for="(msg, idx) in messages" :key="idx">
+                <div x-show="msg.show"
+                     x-transition:enter="transition duration-300"
+                     x-transition:enter-start="opacity-0 translate-x-8"
+                     x-transition:enter-end="opacity-100 translate-x-0"
+                     x-transition:leave="transition duration-200"
+                     x-transition:leave-start="opacity-100"
+                     x-transition:leave-end="opacity-0"
+                     class="pointer-events-auto">
+                    <div role="alert" class="alert shadow-lg" :class="alertClass(msg.type)">
+                        <iconify-icon :icon="iconForType(msg.type)" class="w-5 h-5 shrink-0"></iconify-icon>
+                        <span x-text="msg.text"></span>
+                        <button type="button" @click="dismiss(idx)" class="btn btn-ghost btn-xs btn-circle shrink-0">
+                            <iconify-icon icon="heroicons:x-mark" class="w-3.5 h-3.5"></iconify-icon>
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </div>
+
         {{-- Top bar --}}
         <header class="bg-white border-b border-cool/30 px-8 py-2.5 flex items-center justify-between">
             <div>
@@ -113,6 +132,72 @@
             @yield('content')
         </div>
     </main>
+
+    <script>
+        function toastManager() {
+            return {
+                messages: [],
+                init() {
+                    const toast = {!! json_encode(session('toast')) !!};
+                    console.log(toast);
+                    @php session()->forget('toast') @endphp
+                    if (toast) {
+                        const isDuplicate = this.messages.some(m => m.text === toast.text && m.type === toast.type);
+                        if (!isDuplicate) {
+                            this.messages.push({ ...toast, show: true });
+                            if (toast.type === 'success' || toast.type === 'info') {
+                                setTimeout(() => {
+                                    if (this.messages.length > 0) this.messages[0].show = false;
+                                }, 5000);
+                            }
+                        }
+                    }
+                },
+                alertClass(type) {
+                    return {
+                        'success': 'alert-success',
+                        'error': 'alert-error',
+                        'warning': 'alert-warning',
+                        'info': 'alert-info',
+                    }[type] || 'alert-info';
+                },
+                iconForType(type) {
+                    return {
+                        'success': 'heroicons:check-circle',
+                        'error': 'heroicons:exclamation-circle',
+                        'warning': 'heroicons:exclamation-triangle',
+                        'info': 'heroicons:information-circle',
+                    }[type] || 'heroicons:information-circle';
+                },
+                dismiss(idx) {
+                    this.messages[idx].show = false;
+                },
+            };
+        }
+
+        function keyboardShortcuts() {
+            return {
+                handle(e) {
+                    if (e.ctrlKey || e.metaKey) {
+                        switch (e.key.toLowerCase()) {
+                            case 'n':
+                                e.preventDefault();
+                                window.location.href = '{{ route('projects.create') }}';
+                                break;
+                            case 'd':
+                                e.preventDefault();
+                                window.location.href = '{{ route('dashboard') }}';
+                                break;
+                            case 'p':
+                                e.preventDefault();
+                                window.location.href = '{{ route('projects.index') }}';
+                                break;
+                        }
+                    }
+                },
+            };
+        }
+    </script>
 
 </body>
 </html>

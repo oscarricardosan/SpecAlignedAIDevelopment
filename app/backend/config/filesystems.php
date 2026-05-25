@@ -47,6 +47,13 @@ return [
             'report' => false,
         ],
 
+        'mnt-said-projects' => [
+            'driver' => 'local',
+            'root'   => '/said-projects',
+            'throw'  => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

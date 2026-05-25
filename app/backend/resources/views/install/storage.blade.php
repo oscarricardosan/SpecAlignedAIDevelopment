@@ -14,40 +14,44 @@
     A local MinIO server is included with Docker — you can keep the defaults or point to an external S3.
 </p>
 
-<form action="/install/storage" method="POST" class="space-y-4">
+<form action="{{ route('install.storage.save') }}" method="POST" class="space-y-4"
+      x-data="{ submitting: false }" @submit="submitting = true">
     @csrf
 
     <div class="bg-slate-50 rounded-lg p-4 mb-2">
-        <p class="text-sm font-medium text-navy mb-3">S3 / MinIO credentials</p>
+        <p class="text-sm font-medium text-navy mb-3 flex items-center gap-2">
+            <iconify-icon icon="heroicons:cloud" class="w-4 h-4 text-teal"></iconify-icon>
+            S3 / MinIO credentials
+        </p>
         <div class="space-y-3">
             <div>
                 <label class="block text-sm font-medium text-navy mb-1">Endpoint</label>
-                <input name="s3_endpoint" value="{{ old("s3_endpoint", "http://minio:9000") }}"
-                       class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy placeholder:text-cool focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition" required>
+                <input name="s3_endpoint" value="{{ old('s3_endpoint', 'http://minio:9000') }}"
+                       class="input input-bordered w-full bg-white text-sm text-navy placeholder:text-cool/60 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition" required>
                 <p class="text-xs text-cool mt-1">Use <code class="bg-slate-100 px-1 rounded font-mono text-xs">http://minio:9000</code> for the included MinIO container.</p>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-sm font-medium text-navy mb-1">Access Key</label>
-                    <input name="s3_key" value="{{ old("s3_key", "said_admin") }}"
-                           class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy placeholder:text-cool focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition" required>
+                    <input name="s3_key" value="{{ old('s3_key', 'said_admin') }}"
+                           class="input input-bordered w-full bg-white text-sm text-navy placeholder:text-cool/60 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-navy mb-1">Secret Key</label>
-                    <input name="s3_secret" type="password" value="{{ old("s3_secret", "said_secret") }}"
-                           class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy placeholder:text-cool focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition" required>
+                    <input name="s3_secret" type="password" value="{{ old('s3_secret', 'said_secret') }}"
+                           class="input input-bordered w-full bg-white text-sm text-navy placeholder:text-cool/60 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition" required>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block text-sm font-medium text-navy mb-1">Bucket name</label>
-                    <input name="s3_bucket" value="{{ old("s3_bucket", "said-specs") }}"
-                           class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy placeholder:text-cool focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition" required>
+                    <input name="s3_bucket" value="{{ old('s3_bucket', 'said-specs') }}"
+                           class="input input-bordered w-full bg-white text-sm text-navy placeholder:text-cool/60 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition" required>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-navy mb-1">Region</label>
-                    <input name="s3_region" value="{{ old("s3_region", "us-east-1") }}"
-                           class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy placeholder:text-cool focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition">
+                    <input name="s3_region" value="{{ old('s3_region', 'us-east-1') }}"
+                           class="input input-bordered w-full bg-white text-sm text-navy placeholder:text-cool/60 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition">
                     <p class="text-xs text-cool mt-1">Default: us-east-1. Not critical for MinIO.</p>
                 </div>
             </div>
@@ -55,12 +59,15 @@
     </div>
 
     <div class="bg-slate-50 rounded-lg p-4">
-        <p class="text-sm font-medium text-navy mb-3">SAID projects root folder</p>
+        <p class="text-sm font-medium text-navy mb-3 flex items-center gap-2">
+            <iconify-icon icon="heroicons:folder-open" class="w-4 h-4 text-teal"></iconify-icon>
+            SAID projects root folder
+        </p>
         <div>
             <label class="block text-sm font-medium text-navy mb-1">Local path</label>
-            <input name="said_root" value="{{ old("said_root") }}"
+            <input name="said_root" value="{{ old('said_root') }}"
                    placeholder="/choose-your-projects-path"
-                   class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy placeholder:text-cool focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition font-mono" required>
+                   class="input input-bordered w-full bg-white text-sm text-navy placeholder:text-cool/60 font-mono focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition" required>
             <p class="text-xs text-cool mt-1">
                 This folder will be mounted as a Docker volume. All SAID projects and their <code class="bg-slate-100 px-1 rounded font-mono text-xs">.spec.md</code> files live here.
                 Make sure this path exists on your host machine.
@@ -69,8 +76,13 @@
     </div>
 
     <button type="submit"
-            class="w-full bg-teal text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-teal-dark transition shadow-sm">
-        Save and continue
+            :disabled="submitting"
+            class="btn btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
+        <span x-show="!submitting">Save and continue</span>
+        <span x-show="submitting" class="flex items-center gap-2">
+            <iconify-icon icon="svg-spinners:180-ring" class="w-4 h-4"></iconify-icon>
+            Saving&hellip;
+        </span>
     </button>
 </form>
 @endsection

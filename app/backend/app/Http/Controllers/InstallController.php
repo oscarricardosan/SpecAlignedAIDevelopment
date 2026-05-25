@@ -155,7 +155,7 @@ class InstallController extends Controller
             "password" => $data["password"],
         ]);
 
-        $this->writeEnv(["APP_INSTALLED" => "true"]);
+        $this->writeEnv(["APP_INSTALLED" => "true", "SESSION_DRIVER" => "database"]);
 
         return redirect()->to("/install/complete");
     }

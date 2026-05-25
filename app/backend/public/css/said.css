@@ -17,6 +17,32 @@
     --color-cool:       #c1cbce;
 }
 
+/* DaisyUI theme override — map SAID palette to DaisyUI semantic vars (OKLCH format) */
+:root {
+    --p: 0.65 0.089 225;       /* primary = teal #4eaccf */
+    --pf: 0.58 0.085 225;      /* primary focus (darker) */
+    --pc: 1 0 0;               /* primary content = white */
+    --s: 0.28 0.050 245;       /* secondary = navy #133d5b */
+    --sf: 0.24 0.045 245;
+    --sc: 1 0 0;
+    --a: 0.82 0.070 65;        /* accent = peach #f5c798 */
+    --af: 0.75 0.065 65;
+    --ac: 0.28 0.050 245;
+    --n: 0.80 0.010 240;       /* neutral = cool gray #c1cbce */
+    --nf: 0.72 0.010 240;
+    --nc: 0.28 0.050 245;
+    --b1: 1 0 0;               /* base-100 = white */
+    --b2: 0.97 0 0;
+    --b3: 0.94 0 0;
+    --bc: 0.28 0.050 245;      /* base-content = navy */
+    --in: 0.70 0.070 210;      /* info */
+    --su: 0.65 0.089 225;      /* success = teal */
+    --wa: 0.82 0.070 65;       /* warning = peach */
+    --er: 0.56 0.170 23;       /* error = coral #d94e51 */
+    --rounded-box: 0.75rem;
+    --rounded-btn: 0.5rem;
+}
+
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: #ffffff;
@@ -83,6 +109,7 @@ input:focus, select:focus, textarea:focus {
 .bg-navy\/10   { background-color: color-mix(in srgb, var(--color-navy) 10%, transparent); }
 .bg-navy\/20   { background-color: color-mix(in srgb, var(--color-navy) 20%, transparent); }
 .bg-coral\/10  { background-color: color-mix(in srgb, var(--color-coral) 10%, transparent); }
+.bg-cool\/15   { background-color: color-mix(in srgb, var(--color-cool) 15%, transparent); }
 .bg-peach\/20  { background-color: color-mix(in srgb, var(--color-peach) 20%, transparent); }
 .bg-peach\/30  { background-color: color-mix(in srgb, var(--color-peach) 30%, transparent); }
 
@@ -93,6 +120,7 @@ input:focus, select:focus, textarea:focus {
 .border-cool\/30 { border-color: color-mix(in srgb, var(--color-cool) 30%, transparent); }
 .border-cool\/40 { border-color: color-mix(in srgb, var(--color-cool) 40%, transparent); }
 .border-cool\/50 { border-color: color-mix(in srgb, var(--color-cool) 50%, transparent); }
+.border-peach\/40 { border-color: color-mix(in srgb, var(--color-peach) 40%, transparent); }
 
 .text-teal-light\/70 { color: color-mix(in srgb, var(--color-teal-light) 70%, transparent); }
 .text-teal-light\/80 { color: color-mix(in srgb, var(--color-teal-light) 80%, transparent); }

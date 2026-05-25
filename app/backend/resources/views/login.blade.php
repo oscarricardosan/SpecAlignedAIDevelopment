@@ -6,7 +6,10 @@
     <title>SAID — Login</title>
     <link rel="icon" type="image/png" href="/assets/favicon.png">
     <script src="https://cdn.tailwindcss.com?v=2"></script>
-    <link rel="stylesheet" href="/css/said.css?v=3">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@2/dist/iconify-icon.min.js"></script>
+    <link rel="stylesheet" href="/css/said.css?v=9">
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
@@ -33,47 +36,45 @@
             <h2 class="text-2xl font-bold text-navy mb-6">Sign in</h2>
 
             @if ($errors->any())
-                <div class="bg-coral/10 border border-coral/30 text-coral rounded-lg p-3 mb-4 text-sm">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
+                <div role="alert" class="alert alert-error mb-4 text-sm">
+                    <iconify-icon icon="heroicons:exclamation-triangle" class="w-5 h-5"></iconify-icon>
+                    <span>
+                        @foreach ($errors->all() as $error)
+                            {{ $error }}@if (!$loop->last)<br>@endif
+                        @endforeach
+                    </span>
                 </div>
             @endif
 
-            <form action="/login" method="POST" class="space-y-4">
+            <form action="{{ route('login.post') }}" method="POST" class="space-y-4"
+                  x-data="{ submitting: false }" @submit="submitting = true">
                 @csrf
                 <div>
                     <label class="block text-sm font-medium text-navy mb-1">Email</label>
-                    <input name="email" type="email" value="{{ old("email") }}"
-                           class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy placeholder:text-cool focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition" required autofocus>
+                    <input name="email" type="email" value="{{ old('email') }}"
+                           class="input input-bordered w-full bg-white text-sm text-navy placeholder:text-cool/60 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition" required autofocus>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-navy mb-1">Password</label>
                     <input name="password" type="password"
-                           class="w-full border border-cool rounded-lg px-3 py-2.5 text-sm text-navy placeholder:text-cool focus:outline-none focus:ring-2 focus:ring-teal focus:border-teal transition" required>
+                           class="input input-bordered w-full bg-white text-sm text-navy placeholder:text-cool/60 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition" required>
                 </div>
                 <div class="flex items-center gap-2">
-                    <input name="remember" type="checkbox" id="remember" class="rounded border-cool text-teal focus:ring-teal">
+                    <input name="remember" type="checkbox" id="remember" class="checkbox checkbox-sm border-cool text-teal focus:ring-teal">
                     <label for="remember" class="text-sm text-warm">Remember me</label>
                 </div>
                 <button type="submit"
-                        class="w-full bg-teal text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-teal-dark transition shadow-sm">
-                    Sign in
+                        :disabled="submitting"
+                        class="btn btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
+                    <span x-show="!submitting">Sign in</span>
+                    <span x-show="submitting" class="flex items-center gap-2">
+                        <iconify-icon icon="svg-spinners:180-ring" class="w-4 h-4"></iconify-icon>
+                        Processing&hellip;
+                    </span>
                 </button>
             </form>
         </div>
 
     </div>
-
-    <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll("button[type=submit]").forEach(btn => {
-            btn.form.addEventListener("submit", function () {
-                btn.disabled = true;
-                btn.innerHTML = `<span class="flex items-center justify-center gap-2"><svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Processing...</span>`;
-            });
-        });
-    });
-    </script>
 </body>
 </html>

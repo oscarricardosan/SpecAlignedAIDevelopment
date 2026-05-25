@@ -6,7 +6,10 @@
     <title>SAID — Welcome</title>
     <link rel="icon" type="image/png" href="/assets/favicon.png">
     <script src="https://cdn.tailwindcss.com?v=2"></script>
-    <link rel="stylesheet" href="/css/said.css?v=3">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@2/dist/iconify-icon.min.js"></script>
+    <link rel="stylesheet" href="/css/said.css?v=9">
 </head>
 <body class="min-h-screen flex items-center justify-center p-6">
 
@@ -22,18 +25,16 @@
                 exactly what each feature should do.
             </p>
             <ul class="space-y-2 text-sm text-warm">
-                <li class="flex items-start gap-2"><span class="text-teal mt-0.5">▸</span> Write specs in plain, structured language — no coding required</li>
-                <li class="flex items-start gap-2"><span class="text-teal mt-0.5">▸</span> AI agents read specs and generate the code for you</li>
-                <li class="flex items-start gap-2"><span class="text-teal mt-0.5">▸</span> A second AI audits the code to make sure it follows the spec</li>
-                <li class="flex items-start gap-2"><span class="text-teal mt-0.5">▸</span> Never lose context between sessions — the spec is your shared memory</li>
+                <li class="flex items-start gap-2"><iconify-icon icon="heroicons:chevron-double-right" class="text-teal w-4 h-4 mt-0.5 shrink-0"></iconify-icon> Write specs in plain, structured language — no coding required</li>
+                <li class="flex items-start gap-2"><iconify-icon icon="heroicons:chevron-double-right" class="text-teal w-4 h-4 mt-0.5 shrink-0"></iconify-icon> AI agents read specs and generate the code for you</li>
+                <li class="flex items-start gap-2"><iconify-icon icon="heroicons:chevron-double-right" class="text-teal w-4 h-4 mt-0.5 shrink-0"></iconify-icon> A second AI audits the code to make sure it follows the spec</li>
+                <li class="flex items-start gap-2"><iconify-icon icon="heroicons:chevron-double-right" class="text-teal w-4 h-4 mt-0.5 shrink-0"></iconify-icon> Never lose context between sessions — the spec is your shared memory</li>
             </ul>
         </div>
 
-        <a href="/install"
-           class="inline-flex items-center gap-2 bg-teal text-white px-6 py-3 rounded-lg font-medium hover:bg-teal-dark transition shadow-sm">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-            </svg>
+        <a href="{{ route('install.database') }}"
+           class="btn btn-primary gap-2">
+            <iconify-icon icon="heroicons:heart" class="w-5 h-5"></iconify-icon>
             Start Installation
         </a>
 

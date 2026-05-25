@@ -25,36 +25,35 @@
     Docker Compose must be restarted so the new volume is mounted at <code class="bg-slate-100 px-1.5 py-0.5 rounded text-navy font-mono text-xs">/said-projects</code>.
 </p>
 
-<div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-    <div class="flex items-start gap-3">
-        <svg class="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/>
-        </svg>
-        <div>
-            <p class="text-sm font-semibold text-amber-800 mb-1">Run this command on your host machine:</p>
-            <code class="block bg-slate-900 text-green-400 text-sm px-4 py-3 rounded-lg font-mono mt-2">
-                cd app && <br>
-                docker compose down &&  <br>
-                docker compose up -d
-            </code>
-            <p class="text-xs text-amber-800 mt-2">Docker Compose reads <code class="bg-amber-200 px-1 rounded font-mono text-xs">SAID_ROOT</code> from <code class="bg-amber-200 px-1 rounded font-mono text-xs">app/.env</code> automatically.</p>
-        </div>
+<div role="alert" class="alert alert-warning mb-6 text-sm">
+    <iconify-icon icon="heroicons:exclamation-triangle" class="w-5 h-5"></iconify-icon>
+    <div>
+        <p class="font-semibold mb-1">Run this command on your host machine:</p>
+        <code class="block bg-slate-900 text-green-400 text-sm px-4 py-3 rounded-lg font-mono mt-2">
+            cd app && <br>
+            docker compose down &&  <br>
+            docker compose up -d
+        </code>
+        <p class="text-xs mt-2">Docker Compose reads <code class="bg-amber-200 px-1 rounded font-mono text-xs">SAID_ROOT</code> from <code class="bg-amber-200 px-1 rounded font-mono text-xs">app/.env</code> automatically.</p>
     </div>
 </div>
 
 <div class="bg-slate-50 rounded-lg p-4 mb-2">
-    <p class="text-sm font-medium text-navy mb-2">Status</p>
+    <p class="text-sm font-medium text-navy mb-3 flex items-center gap-2">
+        <iconify-icon icon="heroicons:server-stack" class="w-4 h-4 text-teal"></iconify-icon>
+        Status
+    </p>
     <div class="space-y-2">
         <div class="flex items-center gap-2 text-sm">
             <span>Projects folder mount <code class="bg-slate-100 px-1 rounded font-mono text-xs">/said-projects</code>:</span>
             @if ($mounted)
-                <span class="text-teal font-medium flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                <span class="badge badge-success gap-1 text-xs">
+                    <iconify-icon icon="heroicons:check" class="w-3.5 h-3.5"></iconify-icon>
                     Mounted
                 </span>
             @else
-                <span class="text-coral font-medium flex items-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                <span class="badge badge-error gap-1 text-xs">
+                    <iconify-icon icon="heroicons:x-mark" class="w-3.5 h-3.5"></iconify-icon>
                     Not mounted yet
                 </span>
             @endif
@@ -64,37 +63,45 @@
 
 @if ($postInstall)
     <p class="text-sm text-warm mb-4">
-        <a href="/install/storage" class="text-teal hover:underline font-medium">Go back to the storage setup</a>
+        <a href="{{ route('install.storage') }}" class="link link-primary">Go back to the storage setup</a>
         to reconfigure the path, then restart Docker Compose.
     </p>
     <p class="text-xs text-cool mb-6">
         Once the containers are back up, reload this page.
     </p>
-    <form action="/dashboard" method="GET" class="mt-6">
-        <button type="submit"
-                class="w-full bg-teal text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-teal-dark transition shadow-sm {{ $mounted ? '' : 'opacity-50 cursor-not-allowed' }}"
-                {{ $mounted ? '' : 'disabled' }}>
-            {{ $mounted ? 'Go to dashboard' : 'Restart containers first' }}
+    <form action="{{ route('dashboard') }}" method="GET" class="mt-6">
+        <button type="submit" class="btn btn-primary w-full">
+            <iconify-icon icon="heroicons:arrow-path" class="w-4 h-4"></iconify-icon>
+            Reload page
         </button>
     </form>
 @else
-    <form action="/install/restart" method="POST" class="mt-6">
-        @csrf
-        <button type="submit"
-                class="w-full bg-teal text-white rounded-lg px-4 py-2.5 text-sm font-medium hover:bg-teal-dark transition shadow-sm {{ $mounted ? '' : 'opacity-50 cursor-not-allowed' }}"
-                {{ $mounted ? '' : 'disabled' }}>
-            {{ $mounted ? 'Continue to admin user setup' : 'Restart containers first' }}
-        </button>
-    </form>
+    @if (!$mounted)
+        <p class="text-sm text-warm font-medium text-center mb-4">
+            Restart containers first, then reload this page.
+        </p>
+    @endif
+
+    @if ($mounted)
+        <form action="{{ route('install.restart.save') }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-primary w-full">
+                Continue to admin user setup
+            </button>
+        </form>
+    @else
+        <a href="{{ route('install.restart') }}"
+           class="btn btn-primary w-full">
+            <iconify-icon icon="heroicons:arrow-path" class="w-4 h-4"></iconify-icon>
+            Reload page
+        </a>
+    @endif
+
     <p class="text-xs text-warm mt-3 text-center">
         If the mount still doesn't work,
-        <a href="/install/storage" class="text-teal hover:underline">go back to the storage step</a>
+        <a href="{{ route('install.storage') }}" class="link link-primary">go back to the storage step</a>
         and verify the path is correct.
     </p>
 @endif
-
-<p class="text-xs text-cool mt-3 text-center">
-    The button will be enabled once <code class="bg-slate-100 px-1 rounded font-mono">/said-projects</code> is accessible.
-</p>
 
 @endsection

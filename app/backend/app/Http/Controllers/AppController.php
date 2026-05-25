@@ -19,6 +19,8 @@ class AppController extends Controller
     public function store(Request $request)
     {
         // TODO: persist app
-        return redirect('/dashboard')->with('status', 'Application created.');
+        $this->toast('Application created successfully.', 'success');
+
+        return redirect('/dashboard');
     }
 }

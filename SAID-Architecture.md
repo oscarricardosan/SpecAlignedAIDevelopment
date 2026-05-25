@@ -215,13 +215,76 @@ Servicio (Lógica de negocio)
 
 | Componente | Rol |
 |---|---|
-| **Alpine.js** | Reactividad y lógica del lado del cliente. Consume las APIs REST. |
-| **Tailwind CSS** | Estilos utilitarios, componentes reutilizables con clases. |
-| **Componentes reutilizables** | Fragmentos Blade + Alpine encapsulados (tablas, formularios, árbol, editor de algoritmo). |
+| **DaisyUI** | Componentes UI sin JS propio (modal, drawer, dropdown, tab, collapse, tooltip). Extiende Tailwind con clases semánticas. |
+| **Alpine.js** | Reactividad y lógica de negocio (estados, submits, datos). Consume APIs REST. No se usa para componentes UI. |
+| **Componentes reutilizables** | Fragmentos Blade + DaisyUI encapsulados (tablas, formularios, árbol, editor de algoritmo). |
 
 - No hay Blade tradicional con lógica de backend. Blade solo sirve el layout inicial.
 - Todo el contenido se carga vía APIs con Alpine.js.
 - El frontend es **solo consumo de APIs**, igual que las IAs.
+
+### Alpine.js + Blade: reglas de binding
+
+Los prefijos de Alpine (`x-bind:`, `:`, `x-on:`, `@`) esperan expresiones JavaScript válidas. **Nunca** usar variables de Blade o PHP dentro de directivas Alpine:
+
+```blade
+{{-- ❌ Incorrecto — $project->path no es JS válido, Alpine crashea y reinicializa componentes --}}
+<td :title="$project->path">{{ $project->path }}</td>
+
+{{-- ✅ Correcto — atributo HTML estándar con echo de Blade --}}
+<td title="{{ $project->path }}">{{ $project->path }}</td>
+
+{{-- ✅ Correcto — si se requiere Alpine, pasar el valor como string literal --}}
+<td :title="'{{ $project->path }}'">{{ $project->path }}</td>
+```
+
+| Regla | |
+|---|---|
+| Atributos con `:` o `x-bind:` | Solo expresiones JS. Usar `'{{ $var }}'` (con comillas) para inyectar valores PHP como strings |
+| Atributos HTML sin `:` | Usar `{{ $var }}` normalmente |
+| `@` o `x-on:` | Solo expresiones JS, no PHP |
+
+> Un error de sintaxis en cualquier expresión Alpine (como `$project->path`) rompe el parser de Alpine y causa que componentes como `x-data`, `x-init` y `x-show` se reinicialicen, produciendo efectos secundarios como toasts duplicados, eventos dobles, o pérdida de estado.
+
+### Humanización de identificadores
+
+Los valores almacenados en base de datos usan snake_case y minúsculas (`mission_critical`, `ecommerce`, `b2b`). Para mostrarlos en la UI **nunca** se deben crear arrays de mapeo repetidos en cada vista. En su lugar se usa el helper centralizado `App\Support\Label::humanize()`:
+
+```php
+// ❌ Incorrecto — arrays repetidos en vistas
+$labels = ['internal' => 'Internal', 'b2b' => 'B2B', ...];
+
+// ✅ Correcto — helper centralizado
+{{ \App\Support\Label::humanize($project->criticality) }}
+```
+
+**Funcionamiento**:
+- La clase `Label` contiene un map interno con los valores que no pueden derivarse automáticamente (`ecommerce` → `E-commerce & Retail`, `b2b` → `B2B`, `gdpr` → `GDPR`, `pci_dss` → `PCI-DSS`, etc.).
+- Si el valor no está en el map, aplica fallback automático: `ucwords(str_replace('_', ' ', $value))` — suficiente para casos como `internal` → `Internal` o `mission_critical` → `Mission Critical`.
+- Si un valor nuevo no se resuelve bien con el fallback, solo se agrega al map en un solo lugar.
+- El método `Label::options('field')` devuelve los pares `value => label` completos para poblar selects, checkboxes y radios. **Nunca** hardcodear opciones en la vista.
+
+```blade
+{{-- ❌ Incorrecto — opciones quemadas --}}
+<select>
+    <option value="finance">Finance & Banking</option>
+    <option value="healthcare">Healthcare</option>
+</select>
+
+{{-- ✅ Correcto — desde Label --}}
+<select>
+    @foreach (\App\Support\Label::options('business_sector') as $val => $label)
+        <option value="{{ $val }}" {{ old('field', $model->field ?? '') === $val ? 'selected' : '' }}>{{ $label }}</option>
+    @endforeach
+</select>
+```
+
+| Regla | |
+|---|---|
+| Ubicación | `app/Support/Label.php` |
+| Métodos | `Label::humanize(string $value): string` — valor individual a label |
+| | `Label::options(string $field): array` — todas las opciones de un campo |
+| Cuándo usarlos | `humanize` para mostrar un valor en UI; `options` para poblar selects/checkboxes/radios |
 
 ---
 
@@ -252,11 +315,57 @@ Cada proyecto puede usar stacks distintos (PHP, Rust, Python…). SAID no puede 
 
 ## Modelo de Datos
 
-*(por definir — tablas principales: users, projects, apps, screens, modules, functions, agents, tests, dependencies)*
+### Regla de migraciones
+
+Toda tabla debe incluir estos campos base:
+
+```php
+$table->id();                          // serial primary key
+$table->foreignId('user_who_created_id')->nullable()->constrained('users');
+$table->foreignId('user_who_updated_id')->nullable()->constrained('users');
+$table->foreignId('user_who_deleted_id')->nullable()->constrained('users');
+$table->timestamps();                  // created_at, updated_at
+$table->softDeletes();                 // deleted_at
+```
+
+| Regla | Convención |
+|---|---|
+| Nombres de tabla | Inglés, plural (`projects`, `apps`, `modules`) |
+| Llaves foráneas | Singular con sufijo `_id` (`user_id`, `project_id`, `app_id`) |
+| `id` | Siempre `$table->id()` (bigint serial) |
+| Auditoría | `user_who_created_id`, `user_who_updated_id`, `user_who_deleted_id` — FK a `users` |
+| Timestamps | `created_at`, `updated_at` vía `$table->timestamps()` |
+| Soft deletes | `deleted_at` vía `$table->softDeletes()` |
+
+### Tablas
 
 ## Rutas / APIs
 
 *(por definir — incluyen prefijo /api con middleware auth)*
+
+### Regla de nomenclatura
+
+Toda ruta debe definirse con `->name()`. Las referencias a rutas en controladores, vistas, middleware y redirects deben usar `route('name')`, nunca URLs hardcodeadas.
+
+```php
+// ✅ Correcto
+Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+return redirect()->route('projects.index');
+
+// ❌ Incorrecto
+Route::get('/projects', [ProjectController::class, 'index']);
+return redirect('/projects');
+```
+
+| Tipo | Convención |
+|---|---|
+| Listado | `{resource}.index` |
+| Formulario crear | `{resource}.create` |
+| Guardar | `{resource}.store` |
+| Ver | `{resource}.show` |
+| Formulario editar | `{resource}.edit` |
+| Actualizar | `{resource}.update` |
+| Eliminar | `{resource}.destroy` |
 
 ## Línea Gráfica
 
@@ -390,6 +499,55 @@ Grid 2×2. Cada card: borde `cool/50`, hover borde `teal/60` + sombra. Ícono 36
 | Primario | `bg-teal text-white px-4 py-2 rounded-lg hover:bg-teal-dark` |
 | Secundario | `border border-cool text-navy px-4 py-2 rounded-lg hover:border-teal hover:text-teal` |
 
+**Regla obligatoria — Submit buttons**: Todo `<button type="submit">` debe bloquearse tras el primer click para prevenir dobles envíos. El patrón es Alpine.js inline, con el estado en el `<form>` (no en el botón):
+
+```html
+<form action="..." method="POST"
+      x-data="{ submitting: false }"
+      @submit="submitting = true">
+    @csrf
+    ...
+    <button type="submit"
+            :disabled="submitting"
+            class="bg-teal text-white rounded-lg px-6 py-2.5 text-sm font-medium hover:bg-teal-dark transition shadow-sm disabled:opacity-60 disabled:cursor-not-allowed">
+        <span x-show="!submitting">Create project</span>
+        <span x-show="submitting" class="flex items-center gap-2">
+            <svg class="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+            </svg>
+            Creating&hellip;
+        </span>
+    </button>
+</form>
+```
+
+- `x-data="{ submitting: false }"` **en el `<form>`**, no en el botón.
+- `@submit="submitting = true"` en el form — Alpine captura el evento pero **no previene** el submit nativo. El navegador ya inició el envío antes de que el botón se deshabilite visualmente, así que no hay race condition.
+- `:disabled="submitting"` en el botón — evita doble click y activa los estilos `disabled:`.
+- El `<span x-show="!submitting">` muestra el label original, el otro `<span>` muestra el spinner + texto de progreso.
+
+> **Regla**: No usar entidades HTML (`&hellip;`, `&mdash;`, etc.) dentro de `{{ }}` de Blade. Blade escapa el output con `htmlspecialchars`, convirtiendo `&hellip;` en `&amp;hellip;` (visible literalmente). Usar el carácter Unicode directamente (`…`, `—`) o `{!! !!}` si es imprescindible.
+
+#### Tooltips (DaisyUI)
+
+Las clases `tooltip` de DaisyUI aplican `position: relative` al elemento, lo que interfiere con componentes que usan `display: inline-flex` (como `btn`), desplazando su contenido interno. **Siempre** se debe envolver el elemento en un `<span>` contenedor que lleve las clases tooltip:
+
+```html
+{{-- ❌ Incorrecto — tooltip directo sobre btn rompe el layout --}}
+<a href="#" class="btn btn-primary btn-sm tooltip tooltip-bottom" data-tip="Ctrl+N">...</a>
+
+{{-- ✅ Correcto — tooltip en wrapper --}}
+<span class="tooltip tooltip-bottom" data-tip="Ctrl+N">
+    <a href="#" class="btn btn-primary btn-sm">...</a>
+</span>
+```
+
+| Regla | |
+|---|---|
+| Clases tooltip | Siempre en `<span>` o `<div>` contenedor, nunca en el propio `<a>` o `<button>` con clase `btn` |
+| `data-tip` | En el mismo elemento contenedor que tiene las clases tooltip |
+
 #### Empty state
 
 Cuando una entidad no tiene datos, mostrar siempre una guía visual:
@@ -433,3 +591,12 @@ Cuando una entidad no tiene datos, mostrar siempre una guía visual:
 - **Solo Desktop**: Mínimo 1024px de ancho. No responsive para móvil.
 - **Sidebar siempre visible**: Navegación jerárquica presente en todo momento (árbol de proyectos en el futuro).
 - **Empty state obligatorio**: Toda entidad (proyectos, apps, módulos, funciones, agentes…) debe tener una pantalla de índice que, cuando no hay datos, muestre un empty state con ícono, título descriptivo ("No projects yet"), explicación breve de qué es la entidad y un CTA claro para crear la primera. Nunca una tabla vacía o un espacio en blanco.
+
+### Modales
+
+Todo modal debe usar los componentes de **DaisyUI**:
+
+- Usar `modal` + `modal-box` + `modal-action` + `modal-backdrop`.
+- Abrir/cerrar con el método `showModal()` / `close()` del elemento `<dialog>` nativo.
+- Alpine.js se limita al estado de apertura (`x-data="{ open: false }"`, `@click="open = true"`, `$el.showModal()`), sin lógica de overlay, blur ni teletransporte.
+- El `x-data` del componente debe estar fuera de cualquier `<form>` para evitar conflictos de scope.

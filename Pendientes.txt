@@ -1,4 +1,7 @@
 Omitir archivo, este es para el usuario no para la IA
 
-Haz git push con los cambios del setup que se hicieron
+* Haz git push con los cambios del setup que se hicieron
+
+Continuar con el formulario de creación de proyecto, revisar si los 
+campos son correctos y luego crear las tablas de MER
 

@@ -20,8 +20,9 @@
 
 | Componente | Tecnología | Razón |
 |---|---|---|
-| CSS | **Tailwind CSS** | Utilidades rápidas, sin build complejo. |
-| JavaScript | **Alpine.js** | Reactividad simple, sin compilación, se sirve directo. |
+| CSS | **Tailwind CSS** + **DaisyUI** | Utilidades rápidas + componentes UI sin JS propio (modal, drawer, dropdown, tab, collapse, tooltip, btn, card, badge, table, form-control). |
+| JavaScript | **Alpine.js** | Reactividad simple para lógica de negocio (estados, submits, datos). No se usa para componentes UI — eso lo cubre DaisyUI. |
+| Iconos | **Iconify** | Iconos vía clases CSS desde CDN (incluye Heroicons, Lucide, Material y otros sets). Sin SVGs inline en Blade.
 
 ### Infraestructura
 

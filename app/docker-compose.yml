@@ -18,13 +18,13 @@ services:
     build:
       context: ./docker/php
       dockerfile: Dockerfile
+      args:
+        HOST_UID: ${HOST_UID:-1000}
+        HOST_GID: ${HOST_GID:-1000}
     container_name: spec-aligned-ai-php
-    volumes:
-      - ./backend:/var/www/html
-      - ./.env:/var/docker/.env
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${SAID_ROOT:?SAID_ROOT_not_set}:/said-projects
     environment:
+      - HOST_UID=${HOST_UID:-1000}
+      - HOST_GID=${HOST_GID:-1000}
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -37,6 +37,11 @@ services:
       - S3_BUCKET=said-specs
       - S3_REGION=us-east-1
       - SAID_ROOT
+    volumes:
+      - ./backend:/var/www/html
+      - ./.env:/var/docker/.env
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${SAID_ROOT:?SAID_ROOT_not_set}:/said-projects
     depends_on:
       - postgres
       - minio
@@ -48,10 +53,13 @@ services:
     build:
       context: ./docker/php
       dockerfile: Dockerfile
+      args:
+        HOST_UID: ${HOST_UID:-1000}
+        HOST_GID: ${HOST_GID:-1000}
     container_name: spec-aligned-ai-horizon
-    volumes:
-      - ./backend:/var/www/html
     environment:
+      - HOST_UID=${HOST_UID:-1000}
+      - HOST_GID=${HOST_GID:-1000}
       - DB_CONNECTION=pgsql
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -63,6 +71,10 @@ services:
       - S3_SECRET=said_secret
       - S3_BUCKET=said-specs
       - S3_REGION=us-east-1
+      - SAID_ROOT
+    volumes:
+      - ./backend:/var/www/html
+      - ${SAID_ROOT:?SAID_ROOT_not_set}:/said-projects
     command: php /var/www/html/artisan horizon
     depends_on:
       - php
@@ -78,7 +90,7 @@ services:
     ports:
       - "6379:6379"
     volumes:
-      - ./data/redis:/data
+      - redis_data:/data
     networks:
       - said-network
 
@@ -92,7 +104,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./data/postgres:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - said-network
 
@@ -107,10 +119,15 @@ services:
       - "9000:9000"
       - "9001:9001"
     volumes:
-      - ./data/minio:/data
+      - minio_data:/data
     networks:
       - said-network
 
 networks:
   said-network:
     driver: bridge
+
+volumes:
+  redis_data:
+  postgres_data:
+  minio_data:

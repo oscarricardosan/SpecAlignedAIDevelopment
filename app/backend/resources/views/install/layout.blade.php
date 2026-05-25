@@ -6,17 +6,10 @@
     <title>SAID — Installation</title>
     <link rel="icon" type="image/png" href="/assets/favicon.png">
     <script src="https://cdn.tailwindcss.com?v=2"></script>
-    <link rel="stylesheet" href="/css/said.css?v=3">
-    <script>
-document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll("button[type=submit]").forEach(btn => {
-        btn.form.addEventListener("submit", function () {
-            btn.disabled = true;
-            btn.innerHTML = `<span class="flex items-center justify-center gap-2"><svg class="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Processing...</span>`;
-        });
-    });
-});
-    </script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@2/dist/iconify-icon.min.js"></script>
+    <link rel="stylesheet" href="/css/said.css?v=9">
 </head>
 <body class="min-h-screen flex items-center justify-center p-4">
 
@@ -78,10 +71,13 @@ document.addEventListener("DOMContentLoaded", function () {
         {{-- Right panel: Form --}}
         <div class="p-8 md:w-1/2 flex flex-col justify-center">
             @if ($errors->any())
-                <div class="bg-coral/10 border border-coral/30 text-coral rounded-lg p-3 mb-6 text-sm">
-                    @foreach ($errors->all() as $error)
-                        <p>{{ $error }}</p>
-                    @endforeach
+                <div role="alert" class="alert alert-error mb-6 text-sm">
+                    <iconify-icon icon="heroicons:exclamation-triangle" class="w-5 h-5"></iconify-icon>
+                    <span>
+                        @foreach ($errors->all() as $error)
+                            {{ $error }}@if (!$loop->last)<br>@endif
+                        @endforeach
+                    </span>
                 </div>
             @endif
             @yield('content')
