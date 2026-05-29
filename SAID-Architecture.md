@@ -490,7 +490,7 @@ Grid 2×2. Cada card: borde `cool/50`, hover borde `teal/60` + sombra. Ícono 36
 #### Badges de estado
 
 - **Sidebar**: pills redondeadas `text-[11px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/40`
-- **Cards**: pills `text-xs px-2 py-0.5 rounded-full bg-slate-50 border border-cool/30 text-cool`
+- **Cards**: pills `text-xs px-2 py-0.5 rounded-full bg-cool/10 border border-cool/30 text-cool`
 
 #### Botones
 
@@ -528,6 +528,45 @@ Grid 2×2. Cada card: borde `cool/50`, hover borde `teal/60` + sombra. Ícono 36
 - El `<span x-show="!submitting">` muestra el label original, el otro `<span>` muestra el spinner + texto de progreso.
 
 > **Regla**: No usar entidades HTML (`&hellip;`, `&mdash;`, etc.) dentro de `{{ }}` de Blade. Blade escapa el output con `htmlspecialchars`, convirtiendo `&hellip;` en `&amp;hellip;` (visible literalmente). Usar el carácter Unicode directamente (`…`, `—`) o `{!! !!}` si es imprescindible.
+
+#### Stepper (formularios multi-paso)
+
+Formularios largos se parten en pasos con un stepper horizontal numerado. Cada paso es un botón clickeable que solo se habilita si los pasos anteriores están completos.
+
+```
+[1] Platform ── [2] Language ── [3] Framework ── [4] Storage ── [5] Arch. ── [6] Quality ── [7] Context
+```
+
+| Elemento | Clases |
+|---|---|
+| Contenedor | `flex items-center justify-center gap-1` dentro de `card bg-base-100 border border-cool/50` |
+| Círculo | `w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border transition shrink-0` |
+| Círculo activo | `bg-teal text-white border-teal` |
+| Círculo completado | `bg-teal/10 text-teal border-teal/30 cursor-pointer` (muestra ✓) |
+| Círculo futuro | `text-cool/40 border-cool/30` (disabled) |
+| Label | `text-xs font-semibold hidden sm:inline` |
+| Separador | `w-4 h-px shrink-0` — `bg-teal/40` si ya pasado, `bg-cool/20` si no |
+| Navegación | Botones Back/Next debajo del contenido. Next disabled hasta completar paso actual. Último paso muestra Submit. |
+
+**Reglas del stepper**:
+- La etiqueta de cada paso se abrevia si es necesario para que quepan todos en una línea (`Architecture` → `Arch.`).
+- `goToStep(n)` solo permite navegar a pasos ya completados o al siguiente no completado.
+- `isStepComplete(step)` determina si el botón Next se habilita.
+- El `<form>` y `x-data` del stepper deben estar separados de otros `x-data` (como folderBrowser).
+- `@submit="submitting = true"` en el `<form>`, mismo patrón de submit buttons.
+
+**Ejemplo Alpine.js**:
+
+```javascript
+step: 1,
+goToStep(n) {
+    if (n < this.step || this.isStepComplete(n - 1)) this.step = n;
+},
+isStepComplete(s) {
+    switch (s) { case 1: return !!this.field1; case 2: return !!this.field2; default: return true; }
+},
+canProceed() { return this.isStepComplete(this.step); },
+```
 
 #### Tooltips (DaisyUI)
 
@@ -577,7 +616,7 @@ Cuando una entidad no tiene datos, mostrar siempre una guía visual:
 | Capa | Archivo | Qué contiene |
 |---|---|---|
 | **Tailwind CDN** | `cdn.tailwindcss.com` | Utilidades estándar: layout, spacing, tipografía, flex, grid |
-| **said.css** | `public/css/said.css` | Colores custom (CSS custom properties + clases utilitarias + opacidades), estilos globales (body, scrollbar, focus rings, button:disabled) |
+| **said.css** | `public/css/said.css` | Colores custom (CSS custom properties + clases utilitarias + opacidades), estilos globales (body, scrollbar, border-color en focus, button:disabled). El `box-shadow` del focus ring lo manejan las utilidades `focus:ring-*` de Tailwind, no el CSS global. |
 | **Degradados** | `style="..."` inline | Paneles oscuros (navy → `#000508`). No usar clases Tailwind para degradados con colores custom |
 
 > **Regla**: Los colores de la paleta NO se configuran en `tailwind.config` (el CDN no lo resuelve de forma fiable). Van exclusivamente por `said.css` como clases `.bg-teal`, `.text-navy`, `.border-cool`, etc. con todas sus variantes de opacidad (`.bg-teal/15`, `.text-teal-light/70`, etc.).
@@ -600,3 +639,105 @@ Todo modal debe usar los componentes de **DaisyUI**:
 - Abrir/cerrar con el método `showModal()` / `close()` del elemento `<dialog>` nativo.
 - Alpine.js se limita al estado de apertura (`x-data="{ open: false }"`, `@click="open = true"`, `$el.showModal()`), sin lógica de overlay, blur ni teletransporte.
 - El `x-data` del componente debe estar fuera de cualquier `<form>` para evitar conflictos de scope.
+
+### Form Selection Cards (radios / checkboxes)
+
+Para selecciones entre opciones mutuamente excluyentes o múltiples, usar **input oculto (`class="sr-only"`) + label estilizado como card**. Nunca usar radios/checkboxes nativos de DaisyUI dentro de un form con patrón de cards.
+
+**Radio (selección única)**:
+
+```blade
+<label class="flex items-start gap-3 p-4 border rounded-xl cursor-pointer transition duration-200"
+       :class="selected === 'value' ? 'border-teal/60 bg-teal/5 shadow-sm' : 'border-cool/40 hover:border-teal/50 hover:shadow-sm'">
+    <input type="radio" name="field" value="value" x-model="selected" class="sr-only">
+    <iconify-icon icon="heroicons:icon-name" style="font-size: 28px" class="shrink-0 pointer-events-none mt-0.5"
+                  :class="selected === 'value' ? 'text-teal' : 'text-cool'"></iconify-icon>
+    <div>
+        <span class="text-sm font-semibold text-navy">Label</span>
+        <p class="text-xs text-warm mt-0.5 leading-relaxed">Short description.</p>
+    </div>
+</label>
+```
+
+**Checkbox (selección múltiple)**:
+
+```blade
+<label class="flex flex-col items-center gap-2.5 p-4 border rounded-xl cursor-pointer transition duration-200 text-center"
+       :class="items.includes('value') ? 'border-teal/60 bg-teal/5 shadow-sm' : 'border-cool/40 hover:border-teal/50 hover:shadow-sm'">
+    <input type="checkbox" name="field[]" value="value" class="sr-only"
+           @change="toggle('value', $el.checked)" :checked="items.includes('value')">
+    <iconify-icon icon="heroicons:icon-name" style="font-size: 40px" class="shrink-0 pointer-events-none"
+                  :class="items.includes('value') ? 'text-teal' : 'text-cool'"></iconify-icon>
+    <span class="text-sm font-semibold text-navy">Label</span>
+</label>
+```
+
+| Regla | |
+|---|---|
+| Input | `class="sr-only"` (oculto pero accesible) |
+| Estado seleccionado | `border-teal/60 bg-teal/5 shadow-sm` |
+| Estado normal | `border-cool/40 hover:border-teal/50 hover:shadow-sm` |
+| Transición | Siempre `transition duration-200` |
+| Ícono | `pointer-events-none` en el `<iconify-icon>` para que el click pase al label |
+| Radio binding | `x-model` en el `<input>` |
+| Checkbox binding | Alpine `toggle()` + `:checked` |
+
+### Info Boxes
+
+Para secciones de información adicional dentro de un paso (versiones, campos custom, notas contextuales), usar fondo cool con opacidad baja:
+
+```html
+<div class="p-4 bg-cool/10 rounded-xl border border-cool/20">
+    <!-- contenido -->
+</div>
+```
+
+| Regla | |
+|---|---|
+| Fondo | `bg-cool/10` — NUNCA usar `bg-slate-*` (no pertenece a la paleta SAID) |
+| Borde | `border border-cool/20` |
+| Context tabs inactivos | `bg-cool/10` |
+
+### Form Fields
+
+| Elemento | Clases |
+|---|---|
+| Input text | `input input-bordered w-full bg-white text-sm text-navy placeholder:text-cool/60 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition duration-200` |
+| Textarea | `textarea textarea-bordered w-full bg-white text-sm text-navy placeholder:text-cool/60 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition duration-200` |
+| Select | `select select-bordered w-full bg-white text-sm text-navy focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20 transition duration-200` |
+| Label | `block text-sm font-medium text-navy mb-1` |
+| Required asterisk | `<span class="text-coral">*</span>` junto al label |
+| Hint text | `text-xs text-cool mt-1` debajo del campo |
+
+### Error Messages
+
+Debajo de cada campo validable, incluir un bloque `@error` con estilo consistente:
+
+```blade
+@error('field_name')
+    <p class="text-xs text-coral mt-1 flex items-center gap-1">
+        <iconify-icon icon="heroicons:exclamation-circle" style="font-size: 14px" class="shrink-0"></iconify-icon>
+        {{ $message }}
+    </p>
+@enderror
+```
+
+| Regla | |
+|---|---|
+| Color | `text-coral` |
+| Ícono | `heroicons:exclamation-circle` 14px |
+| Margen | `mt-1` para fields inline, `mt-2` para groups |
+| Todos los campos | Todo campo con validación backend debe tener su `@error` |
+
+### Empty Selection
+
+**No mostrar mensajes** de "no hay nada seleccionado" (ej. "No database selected…", "No testing framework selected…"). El contraste visual entre cards seleccionadas (teal) y no seleccionadas (cool) es suficiente. El espacio vacío comunica el estado sin ruido textual.
+
+### Stepper: reglas adicionales
+
+| Regla | |
+|---|---|
+| Scroll al avanzar | `goToStep()` debe ejecutar `window.scrollTo({ top: 0, behavior: 'smooth' })` |
+| Botones Back/Next | Deben usar `goToStep(step ± 1)`, nunca `step++`/`step--` directo |
+| Framework default | Al cambiar de lenguaje, auto-seleccionar "No framework" para que el package manager se inicialice de inmediato sin salto visual |
+| Dependencia Architecture → Paradigm | Architecture pattern es el item principal del paso 5. Elegir arquitectura **filtra** los paradigmas compatibles hacia abajo. Paradigm depende de architecture, no al revés |

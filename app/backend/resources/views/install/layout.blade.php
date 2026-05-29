@@ -72,7 +72,7 @@
         <div class="p-8 md:w-1/2 flex flex-col justify-center">
             @if ($errors->any())
                 <div role="alert" class="alert alert-error mb-6 text-sm">
-                    <iconify-icon icon="heroicons:exclamation-triangle" class="w-5 h-5"></iconify-icon>
+                    <iconify-icon icon="heroicons:exclamation-triangle" style="font-size: 20px"></iconify-icon>
                     <span>
                         @foreach ($errors->all() as $error)
                             {{ $error }}@if (!$loop->last)<br>@endif

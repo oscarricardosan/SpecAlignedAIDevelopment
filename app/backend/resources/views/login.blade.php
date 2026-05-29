@@ -37,7 +37,7 @@
 
             @if ($errors->any())
                 <div role="alert" class="alert alert-error mb-4 text-sm">
-                    <iconify-icon icon="heroicons:exclamation-triangle" class="w-5 h-5"></iconify-icon>
+                    <iconify-icon icon="heroicons:exclamation-triangle" style="font-size: 20px"></iconify-icon>
                     <span>
                         @foreach ($errors->all() as $error)
                             {{ $error }}@if (!$loop->last)<br>@endif
@@ -68,7 +68,7 @@
                         class="btn btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
                     <span x-show="!submitting">Sign in</span>
                     <span x-show="submitting" class="flex items-center gap-2">
-                        <iconify-icon icon="svg-spinners:180-ring" class="w-4 h-4"></iconify-icon>
+                        <iconify-icon icon="svg-spinners:180-ring" style="font-size: 16px"></iconify-icon>
                         Processing&hellip;
                     </span>
                 </button>

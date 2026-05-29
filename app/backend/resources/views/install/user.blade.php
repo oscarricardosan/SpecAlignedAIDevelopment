@@ -47,7 +47,7 @@
             class="btn btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
         <span x-show="!submitting">Create user and finish installation</span>
         <span x-show="submitting" class="flex items-center gap-2">
-            <iconify-icon icon="svg-spinners:180-ring" class="w-4 h-4"></iconify-icon>
+            <iconify-icon icon="svg-spinners:180-ring" style="font-size: 16px"></iconify-icon>
             Creating&hellip;
         </span>
     </button>

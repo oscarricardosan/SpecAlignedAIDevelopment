@@ -20,7 +20,7 @@
 
     <div class="bg-slate-50 rounded-lg p-4 mb-2">
         <p class="text-sm font-medium text-navy mb-3 flex items-center gap-2">
-            <iconify-icon icon="heroicons:cloud" class="w-4 h-4 text-teal"></iconify-icon>
+            <iconify-icon icon="heroicons:cloud" style="font-size: 16px" class="text-teal"></iconify-icon>
             S3 / MinIO credentials
         </p>
         <div class="space-y-3">
@@ -60,7 +60,7 @@
 
     <div class="bg-slate-50 rounded-lg p-4">
         <p class="text-sm font-medium text-navy mb-3 flex items-center gap-2">
-            <iconify-icon icon="heroicons:folder-open" class="w-4 h-4 text-teal"></iconify-icon>
+            <iconify-icon icon="heroicons:folder-open" style="font-size: 16px" class="text-teal"></iconify-icon>
             SAID projects root folder
         </p>
         <div>
@@ -80,7 +80,7 @@
             class="btn btn-primary w-full disabled:opacity-60 disabled:cursor-not-allowed">
         <span x-show="!submitting">Save and continue</span>
         <span x-show="submitting" class="flex items-center gap-2">
-            <iconify-icon icon="svg-spinners:180-ring" class="w-4 h-4"></iconify-icon>
+            <iconify-icon icon="svg-spinners:180-ring" style="font-size: 16px"></iconify-icon>
             Saving&hellip;
         </span>
     </button>

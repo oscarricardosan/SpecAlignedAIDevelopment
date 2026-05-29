@@ -24,12 +24,12 @@
         <div class="hidden sm:flex items-center gap-2 shrink-0">
             <span class="tooltip tooltip-bottom" data-tip="Ctrl+N">
                 <a href="{{ route('projects.create') }}" class="btn btn-primary btn-sm gap-2">
-                    <iconify-icon icon="heroicons:plus" class="w-4 h-4"></iconify-icon>
+                    <iconify-icon icon="heroicons:plus" style="font-size: 16px"></iconify-icon>
                     Create Project
                 </a>
             </span>
             <a href="#" class="btn btn-outline btn-sm gap-2">
-                <iconify-icon icon="heroicons:pencil" class="w-4 h-4"></iconify-icon>
+                <iconify-icon icon="heroicons:pencil" style="font-size: 16px"></iconify-icon>
                 Write Spec
             </a>
         </div>
@@ -50,7 +50,7 @@
                     </div>
                 </div>
                 <div class="flex items-center px-2 text-cool/40 shrink-0">
-                    <iconify-icon icon="heroicons:chevron-right" class="w-5 h-5"></iconify-icon>
+                    <iconify-icon icon="heroicons:chevron-right" style="font-size: 20px"></iconify-icon>
                 </div>
                 <div class="flex-1 flex items-center gap-3 p-4">
                     <div class="w-8 h-8 rounded-full bg-teal/15 text-teal flex items-center justify-center text-sm font-bold shrink-0">2</div>
@@ -60,7 +60,7 @@
                     </div>
                 </div>
                 <div class="flex items-center px-2 text-cool/40 shrink-0">
-                    <iconify-icon icon="heroicons:chevron-right" class="w-5 h-5"></iconify-icon>
+                    <iconify-icon icon="heroicons:chevron-right" style="font-size: 20px"></iconify-icon>
                 </div>
                 <div class="flex-1 flex items-center gap-3 p-4">
                     <div class="w-8 h-8 rounded-full bg-teal/15 text-teal flex items-center justify-center text-sm font-bold shrink-0">3</div>
@@ -85,11 +85,11 @@
     </div>
     <div class="grid grid-cols-3 gap-3">
         @foreach ($recentProjects as $project)
-        <a href="{{ route('projects.edit', $project) }}"
+        <a href="{{ route('projects.show', $project) }}"
            class="card bg-base-100 border border-cool/50 hover:border-teal/60 hover:shadow-sm transition duration-200 group">
             <div class="card-body p-4">
                 <div class="flex items-center gap-2 mb-2">
-                    <iconify-icon icon="heroicons:folder" class="w-4 h-4 text-peach shrink-0"></iconify-icon>
+                    <iconify-icon icon="heroicons:folder" style="font-size: 16px" class="text-peach shrink-0"></iconify-icon>
                     <h4 class="text-sm font-semibold text-navy group-hover:text-teal transition duration-200 truncate">{{ $project->name }}</h4>
                 </div>
                 <p class="text-xs text-warm line-clamp-2 mb-2">{{ $project->description ?: 'No description' }}</p>
@@ -129,7 +129,7 @@
         <div class="card bg-base-100 border border-cool/50 hover:border-teal/60 hover:shadow-sm transition duration-200 group cursor-pointer">
             <div class="card-body flex-row items-start gap-3 p-4">
                 <div class="w-9 h-9 rounded-lg {{ $card['bg'] }} {{ $card['hb'] }} flex items-center justify-center shrink-0 transition duration-200">
-                    <iconify-icon icon="{{ $card['icon'] }}" class="w-4 h-4"></iconify-icon>
+                    <iconify-icon icon="{{ $card['icon'] }}" style="font-size: 16px"></iconify-icon>
                 </div>
                 <div class="flex-1 min-w-0">
                     <h4 class="text-sm font-semibold text-navy group-hover:text-teal transition duration-200">{{ $card['title'] }}</h4>
@@ -165,7 +165,7 @@
         <div class="card bg-base-100 border border-cool/50 hover:border-teal/60 hover:shadow-sm transition duration-200 group cursor-pointer">
             <div class="card-body flex-row items-start gap-3 p-4">
                 <div class="w-9 h-9 rounded-lg {{ $card['bg'] }} {{ $card['hb'] }} flex items-center justify-center shrink-0 transition duration-200">
-                    <iconify-icon icon="{{ $card['icon'] }}" class="w-4 h-4"></iconify-icon>
+                    <iconify-icon icon="{{ $card['icon'] }}" style="font-size: 16px"></iconify-icon>
                 </div>
                 <div class="flex-1 min-w-0">
                     <h4 class="text-sm font-semibold text-navy group-hover:text-teal transition duration-200">{{ $card['title'] }}</h4>
@@ -182,7 +182,7 @@
 
 {{-- Quick tip --}}
 <div role="alert" class="alert bg-slate-50 border border-slate-200 rounded-lg">
-    <iconify-icon icon="heroicons:light-bulb" class="text-teal w-5 h-5 shrink-0"></iconify-icon>
+    <iconify-icon icon="heroicons:light-bulb" style="font-size: 20px" class="text-teal shrink-0"></iconify-icon>
     <span class="text-sm text-warm">
         <strong class="text-navy">Tip:</strong> SAID works with any programming language. The spec defines <em>what</em> — the AI figures out <em>how</em>.
     </span>

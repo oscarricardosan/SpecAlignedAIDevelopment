@@ -43,6 +43,10 @@
     --rounded-btn: 0.5rem;
 }
 
+html {
+    font-size: 17px;
+}
+
 body {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background-color: #ffffff;
@@ -54,10 +58,9 @@ button[type=submit]:disabled {
     pointer-events: none;
 }
 
-/* Focus ring */
+/* Focus ring — border-color only; ring handled by Tailwind utilities */
 input:focus, select:focus, textarea:focus {
     outline: none;
-    box-shadow: 0 0 0 2px var(--color-teal);
     border-color: var(--color-teal);
 }
 
@@ -109,7 +112,9 @@ input:focus, select:focus, textarea:focus {
 .bg-navy\/10   { background-color: color-mix(in srgb, var(--color-navy) 10%, transparent); }
 .bg-navy\/20   { background-color: color-mix(in srgb, var(--color-navy) 20%, transparent); }
 .bg-coral\/10  { background-color: color-mix(in srgb, var(--color-coral) 10%, transparent); }
+.bg-cool\/10   { background-color: color-mix(in srgb, var(--color-cool) 10%, transparent); }
 .bg-cool\/15   { background-color: color-mix(in srgb, var(--color-cool) 15%, transparent); }
+.bg-cool\/20   { background-color: color-mix(in srgb, var(--color-cool) 20%, transparent); }
 .bg-peach\/20  { background-color: color-mix(in srgb, var(--color-peach) 20%, transparent); }
 .bg-peach\/30  { background-color: color-mix(in srgb, var(--color-peach) 30%, transparent); }
 

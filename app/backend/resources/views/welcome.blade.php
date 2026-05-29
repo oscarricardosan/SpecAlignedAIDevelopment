@@ -25,16 +25,16 @@
                 exactly what each feature should do.
             </p>
             <ul class="space-y-2 text-sm text-warm">
-                <li class="flex items-start gap-2"><iconify-icon icon="heroicons:chevron-double-right" class="text-teal w-4 h-4 mt-0.5 shrink-0"></iconify-icon> Write specs in plain, structured language — no coding required</li>
-                <li class="flex items-start gap-2"><iconify-icon icon="heroicons:chevron-double-right" class="text-teal w-4 h-4 mt-0.5 shrink-0"></iconify-icon> AI agents read specs and generate the code for you</li>
-                <li class="flex items-start gap-2"><iconify-icon icon="heroicons:chevron-double-right" class="text-teal w-4 h-4 mt-0.5 shrink-0"></iconify-icon> A second AI audits the code to make sure it follows the spec</li>
-                <li class="flex items-start gap-2"><iconify-icon icon="heroicons:chevron-double-right" class="text-teal w-4 h-4 mt-0.5 shrink-0"></iconify-icon> Never lose context between sessions — the spec is your shared memory</li>
+                <li class="flex items-start gap-2"><iconify-icon icon="heroicons:chevron-double-right" style="font-size: 16px" class="text-teal mt-0.5 shrink-0"></iconify-icon> Write specs in plain, structured language — no coding required</li>
+                <li class="flex items-start gap-2"><iconify-icon icon="heroicons:chevron-double-right" style="font-size: 16px" class="text-teal mt-0.5 shrink-0"></iconify-icon> AI agents read specs and generate the code for you</li>
+                <li class="flex items-start gap-2"><iconify-icon icon="heroicons:chevron-double-right" style="font-size: 16px" class="text-teal mt-0.5 shrink-0"></iconify-icon> A second AI audits the code to make sure it follows the spec</li>
+                <li class="flex items-start gap-2"><iconify-icon icon="heroicons:chevron-double-right" style="font-size: 16px" class="text-teal mt-0.5 shrink-0"></iconify-icon> Never lose context between sessions — the spec is your shared memory</li>
             </ul>
         </div>
 
         <a href="{{ route('install.database') }}"
            class="btn btn-primary gap-2">
-            <iconify-icon icon="heroicons:heart" class="w-5 h-5"></iconify-icon>
+            <iconify-icon icon="heroicons:heart" style="font-size: 20px"></iconify-icon>
             Start Installation
         </a>
 

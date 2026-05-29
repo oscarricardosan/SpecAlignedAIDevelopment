@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/iconify-icon@2/dist/iconify-icon.min.js"></script>
-    <link rel="stylesheet" href="/css/said.css?v=9">
+    <link rel="stylesheet" href="/css/said.css?v=11">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 <body class="min-h-screen flex text-navy"
@@ -35,34 +35,51 @@
                 $navActive = fn($route) => request()->is($route)
                     ? 'bg-teal/20 text-teal-light border-teal/30'
                     : 'text-white/60 hover:bg-white/5 hover:text-white border-transparent';
+
+                $navActivePrefix = fn($prefix) => str_starts_with(request()->path(), $prefix)
+                    ? 'bg-teal/20 text-teal-light border-teal/30'
+                    : 'text-white/60 hover:bg-white/5 hover:text-white border-transparent';
             @endphp
 
             <a href="{{ route('dashboard') }}"
                class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('dashboard') }} transition duration-200">
-                <iconify-icon icon="heroicons:home" class="w-4 h-4 shrink-0"></iconify-icon>
+                <iconify-icon icon="heroicons:home" style="font-size: 16px" class="shrink-0"></iconify-icon>
                 Dashboard
+            </a>
+
+            <p class="px-3 pt-4 pb-1.5 text-xs font-semibold text-white/25 uppercase tracking-widest">Studio</p>
+
+            <a href="{{ route('studio.index') }}"
+               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActivePrefix('studio') }} transition duration-200">
+                <iconify-icon icon="heroicons:paint-brush" style="font-size: 16px" class="shrink-0"></iconify-icon>
+                <span>Studio</span>
             </a>
 
             <p class="px-3 pt-4 pb-1.5 text-xs font-semibold text-white/25 uppercase tracking-widest">Workspace</p>
 
             <a href="{{ route('projects.index') }}"
-               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('projects*') }} transition duration-200">
-                <iconify-icon icon="heroicons:folder" class="w-4 h-4 shrink-0"></iconify-icon>
+               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActivePrefix('projects') }} transition duration-200">
+                <iconify-icon icon="heroicons:folder" style="font-size: 16px" class="shrink-0"></iconify-icon>
                 <span>Projects</span>
-            </a>
-
-            <a href="#"
-               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('agents*') }} transition duration-200">
-                <iconify-icon icon="heroicons:cpu-chip" class="w-4 h-4 shrink-0"></iconify-icon>
-                <span>AI Agents</span>
-                <span class="badge badge-xs badge-ghost text-white/40 ml-auto">soon</span>
             </a>
 
             <p class="px-3 pt-4 pb-1.5 text-xs font-semibold text-white/25 uppercase tracking-widest">Settings</p>
 
+            <a href="{{ route('providers.index') }}"
+               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActivePrefix('providers') }} transition duration-200">
+                <iconify-icon icon="heroicons:cloud" style="font-size: 16px" class="shrink-0"></iconify-icon>
+                <span>Providers</span>
+            </a>
+
+            <a href="{{ route('ai-agents.index') }}"
+               class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActivePrefix('ai-agents') }} transition duration-200">
+                <iconify-icon icon="heroicons:cpu-chip" style="font-size: 16px" class="shrink-0"></iconify-icon>
+                <span>Agents</span>
+            </a>
+
             <a href="#"
                class="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium border {{ $navActive('tokens*') }} transition duration-200">
-                <iconify-icon icon="heroicons:key" class="w-4 h-4 shrink-0"></iconify-icon>
+                <iconify-icon icon="heroicons:key" style="font-size: 16px" class="shrink-0"></iconify-icon>
                 <span>API Tokens</span>
                 <span class="badge badge-xs badge-ghost text-white/40 ml-auto">soon</span>
             </a>
@@ -83,7 +100,7 @@
                     <button type="submit"
                             class="tooltip tooltip-right text-white/20 hover:text-coral transition duration-200 p-1 rounded"
                             data-tip="Sign out">
-                        <iconify-icon icon="heroicons:arrow-right-start-on-rectangle" class="w-4 h-4"></iconify-icon>
+                        <iconify-icon icon="heroicons:arrow-right-start-on-rectangle" style="font-size: 16px"></iconify-icon>
                     </button>
                 </form>
             </div>
@@ -104,10 +121,10 @@
                      x-transition:leave-end="opacity-0"
                      class="pointer-events-auto">
                     <div role="alert" class="alert shadow-lg" :class="alertClass(msg.type)">
-                        <iconify-icon :icon="iconForType(msg.type)" class="w-5 h-5 shrink-0"></iconify-icon>
+                        <iconify-icon :icon="iconForType(msg.type)" style="font-size: 20px" class="shrink-0"></iconify-icon>
                         <span x-text="msg.text"></span>
                         <button type="button" @click="dismiss(idx)" class="btn btn-ghost btn-xs btn-circle shrink-0">
-                            <iconify-icon icon="heroicons:x-mark" class="w-3.5 h-3.5"></iconify-icon>
+                            <iconify-icon icon="heroicons:x-mark" style="font-size: 14px"></iconify-icon>
                         </button>
                     </div>
                 </div>
@@ -115,15 +132,17 @@
         </div>
 
         {{-- Top bar --}}
-        <header class="bg-white border-b border-cool/30 px-8 py-2.5 flex items-center justify-between">
-            <div>
-                <h1 class="text-lg font-semibold text-navy">@yield('heading', 'Dashboard')</h1>
-                @hasSection('subheading')
-                    <p class="text-xs text-warm mt-0.5">@yield('subheading')</p>
-                @endif
-            </div>
-            <div class="flex items-center gap-3">
-                @yield('actions')
+        <header class="bg-white border-b border-cool/30">
+            <div class="max-w-[1280px] mx-auto px-8 py-2.5 flex items-center justify-between">
+                <div>
+                    <h1 class="text-lg font-semibold text-navy">@yield('heading', 'Dashboard')</h1>
+                    @hasSection('subheading')
+                        <p class="text-xs text-warm mt-0.5">@yield('subheading')</p>
+                    @endif
+                </div>
+                <div class="flex items-center gap-3">
+                    @yield('actions')
+                </div>
             </div>
         </header>
 
@@ -132,6 +151,8 @@
             @yield('content')
         </div>
     </main>
+
+    @stack('scripts')
 
     <script>
         function toastManager() {

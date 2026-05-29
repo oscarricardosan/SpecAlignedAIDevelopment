@@ -1,7 +1,49 @@
-Omitir archivo, este es para el usuario no para la IA
+Omitir archivo, este es para el usuario no para la IAPendientes.txt
 
-* Haz git push con los cambios del setup que se hicieron
+Alcance
+Tres entregables, nada más:
+Página AI Agents — autosuficiente, todo vía fetch, sin recargas
+Página Studio — entrada al módulo, verifica agentes y pide proyecto
+Sidebar — Studio como sección propia, AI Agents en Settings
+Sidebar final
+text
+MAIN
+ · Dashboard
 
-Continuar con el formulario de creación de proyecto, revisar si los 
-campos son correctos y luego crear las tablas de MER
+Studio
+ · Studio
 
+WORKSPACE
+ · Projects
+
+SETTINGS
+ · AI Agents
+ · API Tokens (soon)
+
+AI Agents — Propósito
+Centralizar la configuración de IAs del sistema. El usuario crea providers (credenciales reusables) y asigna provider + modelo por nivel de dificultad a cada uno de los 4 agentes.
+AI Agents — Comportamiento
+Providers: se crean y eliminan vía fetch dentro de la misma página. Al crear uno, aparece al instante en todos los dropdowns de los agentes sin recargar. Al eliminar uno, se limpia de los dropdowns que lo tenían asignado.
+Agentes: 4 filas fijas (assistant, programmer, quality_code, quality_ui). Cada una con 3 pares provider+model (low, medium, high). Se guardan por fila vía fetch PATCH.
+api_key: se guarda encriptada en BD con cast encrypted de Laravel. $hidden evita que se exponga en JSON.
+AI Agents — Datos clave
+Tabla	Qué guarda
+ai_providers	Credenciales reusables: name, provider_code (openai/anthropic/deepseek/groq/together), api_key, api_endpoint
+ai_agents	4 registros fijos sembrados. Cada uno con name nullable + provider_id y model por cada nivel de dificultad
+AiAgent::allConfigured() → true solo si los 4 agentes tienen provider+model en los 3 niveles.
+Studio — Propósito
+Punto de entrada al módulo de diseño y ejecución. Por ahora solo:
+Si no hay agentes configurados → modal bloqueante con link a AI Agents.
+Si hay agentes → selector de proyecto (el resto del dashboard de métricas vendrá después).
+Migraciones y Seeder
+2 migraciones nuevas (ai_providers, ai_agents).
+Sin seeders, los insert se realizan directo en la migración a BD.
+Reglas a respetar
+Colores SAID vía said.css.
+iconify-icon con style="font-size: Xpx".
+Submit buttons con spinner Alpine.
+Modal DaisyUI con showModal() nativo.
+Empty states obligatorios.
+Label::humanize() para mostrar provider_code.
+api_key con cast encrypted en modelo.
+Studio es el corazón del sistema, puedes usar todo el ancho del sistema y colapsar el sidebar adicional.

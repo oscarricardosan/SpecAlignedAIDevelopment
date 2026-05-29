@@ -11,7 +11,7 @@ class ProjectController extends Controller
 {
     public function index()
     {
-        $projects = Project::with('compliances')->latest()->get();
+        $projects = Project::with('compliances')->withCount('applications')->latest()->get();
 
         return view('projects.index', compact('projects'));
     }
@@ -36,7 +36,8 @@ class ProjectController extends Controller
 
         $project = Project::create([
             'name'                 => $validated['name'],
-            'path'                 => $validated['path'],
+            'path'                 => ltrim($validated['path'], '/'),
+            'disk'                 => 'mnt-said-projects',
             'description'          => $validated['description'] ?? null,
             'criticality'          => $validated['criticality'],
             'business_sector'      => $validated['business_sector'],
@@ -55,7 +56,15 @@ class ProjectController extends Controller
 
         $this->toast('Project "' . $project->name . '" created successfully.', 'success');
 
-        return redirect()->route('projects.index');
+        return redirect()->route('projects.show', $project);
+    }
+
+    public function show(Project $project)
+    {
+        $project->load('compliances');
+        $applications = $project->applications()->latest()->get();
+
+        return view('projects.show', compact('project', 'applications'));
     }
 
     public function edit(Project $project)
@@ -98,6 +107,6 @@ class ProjectController extends Controller
 
         $this->toast('Project "' . $project->name . '" updated successfully.', 'success');
 
-        return redirect()->route('projects.index');
+        return redirect()->route('projects.show', $project);
     }
 }

@@ -13,6 +13,7 @@ class Project extends Model
     protected $fillable = [
         'name',
         'path',
+        'disk',
         'description',
         'criticality',
         'business_sector',
@@ -25,5 +26,10 @@ class Project extends Model
     public function compliances(): HasMany
     {
         return $this->hasMany(ProjectCompliance::class);
+    }
+
+    public function applications(): HasMany
+    {
+        return $this->hasMany(Application::class);
     }
 }
